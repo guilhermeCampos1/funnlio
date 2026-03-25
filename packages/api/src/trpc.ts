@@ -1,6 +1,9 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import { z } from 'zod'
+import { eq, organizations } from '@funnlio/db'
 import type { Database } from '@funnlio/db'
+import { getEffectivePlanLimits } from '@funnlio/shared'
+import type { Plan } from '@funnlio/shared'
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +53,43 @@ const enforceOrgOwnerOrAdmin = t.middleware(({ ctx, next }) => {
   }
   return next({ ctx: { ...ctx, session: ctx.session } })
 })
+
+// ─── Plan Limit Middleware Factory ────────────────────────────────────────────
+
+type LimitResource = 'maxFunnels' | 'maxIntegrations' | 'maxMembers'
+
+export function createPlanLimitMiddleware(
+  resource: LimitResource,
+  getCurrentCount: (ctx: { db: Database; organizationId: string }) => Promise<number>,
+) {
+  return t.middleware(async ({ ctx, next }) => {
+    if (!ctx.session) throw new TRPCError({ code: 'UNAUTHORIZED' })
+
+    const org = await ctx.db.query.organizations.findFirst({
+      where: eq(organizations.id, ctx.session.organizationId),
+      columns: { plan: true, planExpiresAt: true },
+    })
+
+    if (!org) throw new TRPCError({ code: 'NOT_FOUND', message: 'Organização não encontrada' })
+
+    const plan = org.plan as Plan
+    const trialExpired = org.planExpiresAt ? new Date(org.planExpiresAt) <= new Date() : true
+    const limits = getEffectivePlanLimits(plan, trialExpired)
+    const limit = limits[resource]
+
+    if (isFinite(limit)) {
+      const current = await getCurrentCount({ db: ctx.db, organizationId: ctx.session.organizationId })
+      if (current >= limit) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `PLAN_LIMIT_REACHED:${resource}:${current}:${limit}:${plan}`,
+        })
+      }
+    }
+
+    return next({ ctx })
+  })
+}
 
 // ─── Procedures ───────────────────────────────────────────────────────────────
 
