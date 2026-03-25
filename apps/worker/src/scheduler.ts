@@ -6,22 +6,37 @@ import {
   integrations,
   organizations,
   syncJobs,
+  funnels,
   eq,
   and,
   isNotNull,
 } from '@funnlio/db'
 import { PLAN_SYNC_INTERVALS } from '@funnlio/shared'
 import type { CollectMetricsPayload } from './jobs/collect-metrics.js'
+import type { DetectInsightsPayload } from './jobs/detect-insights.js'
 
 let metricsQueue: Queue<CollectMetricsPayload>
+let insightsQueue: Queue<DetectInsightsPayload>
 
-export function initScheduler(queue: Queue<CollectMetricsPayload>) {
-  metricsQueue = queue
+export function initScheduler(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mQueue: Queue<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  iQueue?: Queue<any>,
+) {
+  metricsQueue = mQueue
+  if (iQueue) insightsQueue = iQueue
 
   // A cada 15 minutos: verificar quais etapas precisam de sync
   cron.schedule('*/15 * * * *', async () => {
     console.log('[scheduler] Verificando etapas para sync...')
     await enqueueStagesNeedingSync()
+  })
+
+  // A cada 6 horas: detectar insights automáticos
+  cron.schedule('0 */6 * * *', async () => {
+    console.log('[scheduler] Detectando insights...')
+    await enqueueInsightDetection()
   })
 
   console.log('[scheduler] Scheduler iniciado')
@@ -78,6 +93,26 @@ async function enqueueStagesNeedingSync() {
     }
   } catch (error) {
     console.error('[scheduler] Erro ao verificar etapas:', error)
+  }
+}
+
+async function enqueueInsightDetection() {
+  if (!insightsQueue) return
+  try {
+    const orgs = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+
+    for (const org of orgs) {
+      await insightsQueue.add(
+        'detect-insights',
+        { organizationId: org.id },
+        { attempts: 2, backoff: { type: 'fixed', delay: 5000 } },
+      )
+    }
+    console.log(`[scheduler] ${orgs.length} org(s) enfileirada(s) para análise de insights`)
+  } catch (error) {
+    console.error('[scheduler] Erro ao enfileirar insights:', error)
   }
 }
 
