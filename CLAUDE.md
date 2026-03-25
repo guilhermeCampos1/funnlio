@@ -26,7 +26,18 @@
 
 ## AÇÃO OBRIGATÓRIA ANTES DE QUALQUER COISA
 
-**Leia o arquivo `PRD.md` na raiz deste projeto antes de executar qualquer ação.**
+**Leia os seguintes arquivos antes de executar qualquer ação:**
+
+1. `PRD.md` — fonte da verdade do projeto (status, roadmap, checklists)
+2. `docs/reed-richards-growth-plan.md` — plano completo de growth/billing/retenção do Reed Richards
+
+**O documento do Reed Richards é OBRIGATÓRIO** para qualquer trabalho nas Fases 2, 3 ou 4. Ele contém: estratégia de pricing, modelo de trial, feature fencing por plano, copies de banners de upsell, fluxo de cancelamento em 3 passos, sequência de emails de trial, métricas de valor, insights automáticos, e toda a lógica de retenção e dependência. **Não implemente billing, feature gates, upgrade flows, value dashboard, insights, alertas ou qualquer item das Fases 2-4 sem ler esse documento primeiro.**
+
+Quando TODOS os itens das Fases 2, 3 e 4 estiverem concluídos (✅ no PRD), esta regra pode ser removida.
+
+---
+
+**Leia também o `PRD.md`:**
 
 O PRD é a fonte da verdade do projeto: ele contém o que já foi implementado (checklist ✅) e o que ainda falta fazer (checklist 🔲). Sem ler o PRD, você não tem contexto do estado atual do desenvolvimento e vai repetir trabalho já feito ou pular dependências.
 
