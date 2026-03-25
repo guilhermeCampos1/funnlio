@@ -10,7 +10,7 @@ import {
   and,
 } from '@funnlio/db'
 import { getProvider } from '@funnlio/integrations'
-import { getDateRange } from '@funnlio/shared'
+import { getDateRange, decryptCredentials } from '@funnlio/shared'
 
 export interface CollectMetricsPayload {
   jobId: string          // ID do sync_job no banco
@@ -66,8 +66,11 @@ export async function collectMetrics(job: Job<CollectMetricsPayload>): Promise<v
       return
     }
 
-    // 5. Descriptografar credenciais (TODO: implementar AES-256 decrypt)
-    const credentials = integration.credentials as Record<string, string>
+    // 5. Descriptografar credenciais
+    const rawCreds = integration.credentials as Record<string, string>
+    const credentials = rawCreds.encrypted
+      ? decryptCredentials(rawCreds.encrypted)
+      : rawCreds
     const config = integration.config as Record<string, string | string[]>
 
     console.log(`[worker] Coletando ${metricKeys.length} métricas para etapa ${stage.name} via ${provider.name}`)

@@ -222,7 +222,7 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 
 ---
 
-#### 🔲 Pendente — Fase 1
+#### ✅ Pendente — Fase 1 (quase completo, resta OAuth2)
 
 **Autenticação e onboarding**
 - [x] Página de Login (`/login`)
@@ -232,37 +232,45 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 - [x] Router `organizations.create` + `organizations.hasOrg`
 - [x] tRPC context busca org real via `organization_members` (não depende de `activeOrganizationId`)
 - [x] Dashboard redireciona para `/onboarding` se usuário sem organização
-- [ ] Seletor de organização ativa (org switcher na sidebar)
-- [ ] Página de convidar membros (`/settings/members`)
+- [x] Seletor de organização ativa (org switcher na sidebar)
+- [x] Página de convidar membros (`/settings/members`)
 
 **Configuração de etapas (UI)**
 - [x] Sheet "Adicionar Etapa" (`AddStageSheet`) — nome + ferramenta + KPIs com pré-seleção
 - [x] Empty state educativo no funil com CTA e exemplo (Captação → Landing Page → Vendas)
 - [x] Botão "+ Adicionar etapa" no final da lista de etapas
 - [x] UX aprovada via skill `/saas-audit` antes da implementação
-- [ ] UI para configurar `metricConfig` da etapa (qual campanha/pipeline específico observar)
-- [ ] Drag & drop para reordenar etapas
+- [x] UI para configurar `metricConfig` da etapa (qual campanha/pipeline específico observar)
+- [x] Drag & drop para reordenar etapas
 
 **Coleta e exibição de métricas**
-- [ ] Botão "Sincronizar" funcional na UI (chama `metrics.triggerSync`)
-- [ ] Polling de status do job após sync manual
-- [ ] Seletor de período (last 7d / 30d / 90d) no dashboard do funil
-- [ ] Gráfico de evolução temporal das métricas (Recharts)
-- [ ] Indicador visual de "última atualização" por etapa
+- [x] Botão "Sincronizar" funcional na UI (chama `metrics.triggerSync`)
+- [x] Polling de status do job após sync manual
+- [x] Seletor de período (last 7d / 30d / 90d) no dashboard do funil
+- [x] Gráfico de evolução temporal das métricas (Recharts)
+- [x] Indicador visual de "última atualização" por etapa
 
 **Página de Integrações**
-- [ ] `/integrations` — lista integrações conectadas com status
-- [ ] Formulário de conexão por provider (campos dinâmicos do `configSchema`)
-- [ ] Botão "Testar conexão" funcional
+- [x] `/integrations` — lista integrações conectadas com status
+- [x] Formulário de conexão por provider (campos dinâmicos do `configSchema`)
+- [x] Botão "Testar conexão" funcional
 - [ ] OAuth2 flow para Google Ads e Google Analytics
 
 **Segurança**
-- [ ] **Encryption AES-256 das credentials** no banco (atualmente salvo em plain text — crítico antes de ir a produção)
-- [ ] Decrypt ao usar no worker
+- [x] **Encryption AES-256 das credentials** no banco (AES-256-GCM com iv:authTag:ciphertext)
+- [x] Decrypt ao usar no worker e nos routers de integração
 
 **Banco de dados**
-- [ ] Rodar `pnpm db:push` para criar tabelas no Supabase
-- [ ] Rodar seed de `integration_providers`
+- [x] Rodar `pnpm db:push` para criar tabelas no Supabase
+- [x] Rodar seed de `integration_providers`
+
+**Versionamento e CI/CD**
+- [x] Git inicializado com estrutura develop / stage / main
+- [x] Repositório no GitHub: https://github.com/guilhermeCampos1/funnlio
+- [x] Branch protection rules configuradas nas 3 branches
+- [x] GitHub Actions CI: ci-develop, ci-stage, ci-main
+- [x] BRANCHING.md — lei de ambientes documentada
+- [ ] GitHub Pro (aguardando primeiro cliente para assinar)
 
 ---
 
@@ -300,7 +308,74 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 
 ---
 
-## 11. Como Rodar Localmente
+## 11. Git, GitHub e Ambientes
+
+### Repositório
+
+- **URL:** https://github.com/guilhermeCampos1/funnlio
+- **Visibilidade:** Público (muda para privado ao assinar GitHub Pro com o primeiro cliente)
+
+### Os três ambientes — LEI
+
+| Ambiente | Branch  | Quem usa      | O que é                          |
+|----------|---------|---------------|----------------------------------|
+| Produção | develop | Time de dev   | Desenvolvimento ativo e contínuo |
+| Stage    | stage   | Time interno  | Validação antes do live          |
+| Live     | main    | Clientes      | Somente código 100% validado     |
+
+### Fluxo obrigatório
+
+```
+feature/xyz → develop → stage → main
+             (Produção) (Stage) (Live)
+```
+
+**Nunca pule etapas.** `main` só recebe de `stage`. `stage` só recebe de `develop`.
+
+### Como começar qualquer tarefa
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feat/nome-da-feature
+```
+
+### Como subir para Stage (validação)
+
+```bash
+# Abrir PR no GitHub: develop → stage
+# CI deve passar + 1 aprovação de review
+```
+
+### Como subir para Live (clientes)
+
+```bash
+# Abrir PR no GitHub: stage → main
+# CI deve passar + 1 aprovação de review
+# Após merge: criar tag de versão
+git tag -a v1.x.x -m "Release v1.x.x: descrição"
+git push origin v1.x.x
+```
+
+### CI/CD (GitHub Actions)
+
+| Workflow | Roda em | O que verifica |
+|---|---|---|
+| `ci-develop.yml` | push/PR em `develop` | type-check + build |
+| `ci-stage.yml` | PR em `stage` | origem (só develop/hotfix) + type-check + build + secrets |
+| `ci-main.yml` | PR em `main` | origem (só stage/hotfix) + type-check + build + secrets + .env |
+
+### Branch protection ativa
+
+- `main` — PR obrigatório + CI + 1 review + admin não pode bypassar
+- `stage` — PR obrigatório + CI + 1 review
+- `develop` — CI obrigatório
+
+> **Detalhes completos:** ver `BRANCHING.md` na raiz do projeto.
+
+---
+
+## 12. Como Rodar Localmente
 
 ### Pré-requisitos
 - Node.js >= 20

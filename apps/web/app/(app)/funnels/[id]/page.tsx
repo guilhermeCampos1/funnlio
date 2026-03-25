@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { api } from '@/lib/trpc-server'
-import { FunnelStageList } from '@/components/funnels/funnel-stage-list'
-import { FunnelHeader } from '@/components/funnels/funnel-header'
+import { FunnelDetailClient } from '@/components/funnels/funnel-detail-client'
 
 export const metadata: Metadata = { title: 'Funil' }
 
@@ -20,10 +19,5 @@ export default async function FunnelDetailPage({ params }: Props) {
     notFound()
   }
 
-  return (
-    <div className="space-y-6">
-      <FunnelHeader funnel={funnel} />
-      <FunnelStageList stages={funnel.stages} funnelId={funnel.id} />
-    </div>
-  )
+  return <FunnelDetailClient funnel={funnel} />
 }

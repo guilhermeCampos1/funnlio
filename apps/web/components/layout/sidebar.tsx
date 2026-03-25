@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { BarChart3, GitBranch, LogOut, Plug, Settings, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
+import { OrgSwitcher } from './org-switcher'
 
 interface SidebarProps {
   user: { id: string; name?: string | null; email: string; role?: string }
@@ -35,6 +36,11 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
           <span className="font-bold text-lg">Funnlio</span>
         </Link>
+      </div>
+
+      {/* Org Switcher */}
+      <div className="px-4 pt-3">
+        <OrgSwitcher />
       </div>
 
       {/* Nav */}
