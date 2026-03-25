@@ -12,7 +12,7 @@ export function TrialBanner() {
   if (!subscription) return null
   if (subscription.plan !== 'trial') return null
 
-  const trialEndsAt = subscription.trialEndsAt ? new Date(subscription.trialEndsAt) : null
+  const trialEndsAt = subscription.planExpiresAt ? new Date(subscription.planExpiresAt) : null
   if (!trialEndsAt) return null
 
   const now = new Date()

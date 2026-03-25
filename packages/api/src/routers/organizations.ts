@@ -162,4 +162,31 @@ export const organizationsRouter = router({
 
       return org
     }),
+
+  // Atualizar role de membro
+  updateMemberRole: ownerAdminProcedure
+    .input(z.object({
+      memberId: z.string().uuid(),
+      role: z.enum(['admin', 'viewer']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId } = ctx.session
+
+      const member = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.id, input.memberId),
+          eq(organizationMembers.organizationId, organizationId),
+        ),
+      })
+
+      if (!member) throw new TRPCError({ code: 'NOT_FOUND', message: 'Membro não encontrado' })
+      if (member.role === 'owner') throw new TRPCError({ code: 'FORBIDDEN', message: 'Role do owner não pode ser alterado' })
+
+      await ctx.db
+        .update(organizationMembers)
+        .set({ role: input.role })
+        .where(eq(organizationMembers.id, input.memberId))
+
+      return { success: true }
+    }),
 })

@@ -25,20 +25,20 @@ import { FeatureGate } from '@/components/billing/feature-gate'
 interface WebhookConfig {
   id: string
   url: string
-  events: string[]
-  active: boolean
-  failureCount: number
+  events: string
+  isActive: boolean
+  failureCount: string
   lastTriggeredAt: string | null
   createdAt: string
 }
 
 interface WebhookLogEntry {
   id: string
-  event: string
-  statusCode: number | null
+  eventType: string
+  responseStatus: string | null
   success: boolean
-  timestamp: string
-  errorMessage: string | null
+  createdAt: string
+  responseBody: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +132,7 @@ function CreatedSecretBanner({ secret, onDismiss }: { secret: string; onDismiss:
 // ---------------------------------------------------------------------------
 
 function WebhookLogViewer({ webhookId }: { webhookId: string }) {
-  const { data: logs = [], isLoading } = trpc.webhooks.listLogs.useQuery(
+  const { data: logs = [], isLoading } = trpc.webhooksConfig.getLogs.useQuery(
     { webhookId, limit: 20 },
   )
 
@@ -146,7 +146,7 @@ function WebhookLogViewer({ webhookId }: { webhookId: string }) {
     )
   }
 
-  if ((logs as WebhookLogEntry[]).length === 0) {
+  if ((logs as unknown as WebhookLogEntry[]).length === 0) {
     return (
       <div className="px-5 py-4 text-sm text-muted-foreground text-center">
         Nenhum log disponivel para este webhook.
@@ -163,11 +163,11 @@ function WebhookLogViewer({ webhookId }: { webhookId: string }) {
             <th className="pb-2 font-medium">Evento</th>
             <th className="pb-2 font-medium">Codigo</th>
             <th className="pb-2 font-medium">Data</th>
-            <th className="pb-2 font-medium">Erro</th>
+            <th className="pb-2 font-medium">Resposta</th>
           </tr>
         </thead>
         <tbody className="divide-y">
-          {(logs as WebhookLogEntry[]).map((log) => (
+          {(logs as unknown as WebhookLogEntry[]).map((log) => (
             <tr key={log.id}>
               <td className="py-2 pr-3">
                 {log.success ? (
@@ -176,13 +176,13 @@ function WebhookLogViewer({ webhookId }: { webhookId: string }) {
                   <XCircle className="w-3.5 h-3.5 text-red-500" />
                 )}
               </td>
-              <td className="py-2 pr-3 font-mono">{log.event}</td>
-              <td className="py-2 pr-3">{log.statusCode ?? '-'}</td>
+              <td className="py-2 pr-3 font-mono">{log.eventType}</td>
+              <td className="py-2 pr-3">{log.responseStatus ?? '-'}</td>
               <td className="py-2 pr-3 text-muted-foreground">
-                {new Date(log.timestamp).toLocaleString('pt-BR')}
+                {new Date(log.createdAt).toLocaleString('pt-BR')}
               </td>
               <td className="py-2 text-muted-foreground truncate max-w-[200px]">
-                {log.errorMessage ?? '-'}
+                {log.responseBody ?? '-'}
               </td>
             </tr>
           ))}
@@ -224,7 +224,7 @@ function WebhookRow({
         </button>
 
         <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-          <Webhook className={cn('w-4 h-4', webhook.active ? 'text-primary' : 'text-muted-foreground')} />
+          <Webhook className={cn('w-4 h-4', webhook.isActive ? 'text-primary' : 'text-muted-foreground')} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -233,12 +233,12 @@ function WebhookRow({
             <span
               className={cn(
                 'text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-full flex-shrink-0',
-                webhook.active
+                webhook.isActive
                   ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
                   : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
               )}
             >
-              {webhook.active ? 'Ativo' : 'Inativo'}
+              {webhook.isActive ? 'Ativo' : 'Inativo'}
             </span>
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -248,13 +248,13 @@ function WebhookRow({
                 ? new Date(webhook.lastTriggeredAt).toLocaleString('pt-BR')
                 : 'Nunca disparado'}
             </span>
-            {webhook.failureCount > 0 && (
+            {Number(webhook.failureCount) > 0 && (
               <span className="text-xs text-red-600 font-medium">
-                {webhook.failureCount} falha{webhook.failureCount > 1 ? 's' : ''}
+                {webhook.failureCount} falha{Number(webhook.failureCount) > 1 ? 's' : ''}
               </span>
             )}
             <div className="flex items-center gap-1">
-              {webhook.events.map((evt) => (
+              {(JSON.parse(webhook.events) as string[]).map((evt) => (
                 <span
                   key={evt}
                   className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono"
@@ -311,19 +311,19 @@ function WebhooksPageContent() {
   const [createdSecret, setCreatedSecret] = useState<string | null>(null)
 
   const utils = trpc.useUtils()
-  const { data: webhooks = [], isLoading } = trpc.webhooks.list.useQuery()
+  const { data: webhooks = [], isLoading } = trpc.webhooksConfig.list.useQuery()
 
-  const createWebhook = trpc.webhooks.create.useMutation({
-    onSuccess: (data) => {
+  const createWebhook = trpc.webhooksConfig.create.useMutation({
+    onSuccess: (data: { secret: string }) => {
       setCreatedSecret(data.secret)
       setUrl('')
       setSelectedEvents(new Set())
-      utils.webhooks.list.invalidate()
+      utils.webhooksConfig.list.invalidate()
     },
   })
 
-  const deleteWebhook = trpc.webhooks.delete.useMutation({
-    onSuccess: () => utils.webhooks.list.invalidate(),
+  const deleteWebhook = trpc.webhooksConfig.delete.useMutation({
+    onSuccess: () => utils.webhooksConfig.list.invalidate(),
   })
 
   function handleCreate(e: React.FormEvent) {
@@ -437,11 +437,11 @@ function WebhooksPageContent() {
       </form>
 
       {/* Webhooks list */}
-      {(webhooks as WebhookConfig[]).length === 0 ? (
+      {(webhooks as unknown as WebhookConfig[]).length === 0 ? (
         <EmptyState />
       ) : (
         <div className="rounded-lg border bg-card">
-          {(webhooks as WebhookConfig[]).map((webhook) => (
+          {(webhooks as unknown as WebhookConfig[]).map((webhook) => (
             <WebhookRow
               key={webhook.id}
               webhook={webhook}

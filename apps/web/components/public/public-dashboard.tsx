@@ -67,7 +67,7 @@ export function PublicDashboard({ token }: PublicDashboardProps) {
                 <div className="rounded-lg border bg-card p-5">
                   <h2 className="font-semibold text-base mb-3">{stage.name}</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {stage.metrics.map((metric) => (
+                    {stage.metrics.map((metric: { key: string; label: string; value: number | null; type: string }) => (
                       <div key={metric.key}>
                         <p className="text-xs text-muted-foreground">{metric.label}</p>
                         <p className="text-lg font-semibold">

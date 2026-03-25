@@ -172,7 +172,7 @@ export function PermissionsPageClient() {
   })
 
   function handleChangeRole(memberId: string, newRole: PermissionLevel) {
-    updateRole.mutate({ memberId, role: newRole })
+    updateRole.mutate({ memberId, role: newRole as 'admin' | 'viewer' })
   }
 
   if (isLoading) {

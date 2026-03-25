@@ -13,7 +13,7 @@ const statusConfig = {
 }
 
 export function AdminJobsClient() {
-  const { data: jobs, isLoading, refetch } = trpc.admin.listJobs.useQuery()
+  const { data: jobs, isLoading, refetch } = trpc.admin.listJobs.useQuery({})
 
   return (
     <div className="space-y-6">

@@ -702,9 +702,9 @@ export function BillingPageClient() {
       ? 'Free'
       : PLANS.find((p) => p.key === currentPlan)?.name ?? currentPlan
 
-  const status = sub?.status ?? 'free'
-  const price = sub?.price ?? null
-  const cycle = sub?.billingCycle ?? null
+  const status = sub?.subscription?.status ?? 'free'
+  const price = null // derived from plan, not stored separately
+  const cycle = sub?.subscription?.billingCycle ?? null
 
   function handleSelectPlan(plan: PlanKey) {
     setLoadingPlan(plan)
@@ -738,8 +738,8 @@ export function BillingPageClient() {
       </div>
 
       {/* Trial banner */}
-      {sub?.trialEndsAt && status === 'trialing' && (
-        <TrialBanner trialEndsAt={sub.trialEndsAt} />
+      {sub?.planExpiresAt && status === 'trialing' && (
+        <TrialBanner trialEndsAt={sub.planExpiresAt} />
       )}
 
       {/* Current plan */}
@@ -769,7 +769,13 @@ export function BillingPageClient() {
 
       {/* Invoice history */}
       <InvoiceHistory
-        invoices={invoices.data ?? []}
+        invoices={(invoices.data ?? []).map(inv => ({
+          id: inv.id,
+          date: inv.createdAt,
+          amount: inv.amountPaid,
+          status: inv.status,
+          pdfUrl: inv.pdfUrl,
+        }))}
         isLoading={invoices.isLoading}
       />
     </div>

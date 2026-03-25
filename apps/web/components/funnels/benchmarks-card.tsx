@@ -247,26 +247,26 @@ function VerticalPrompt({ onSelect }: { onSelect: (slug: string) => void }) {
 // Main content
 // ---------------------------------------------------------------------------
 
-function BenchmarksContent({ funnelId }: { funnelId: string }) {
-  const [vertical, setVertical] = useState<string | null>(null)
+type VerticalSlug = 'ecommerce' | 'infoproduto' | 'saas' | 'servico' | 'agencia' | 'other'
 
-  const { data: savedVertical } = trpc.benchmarks.getVertical.useQuery({ funnelId })
-  const { data: benchmarkData, isLoading } = trpc.benchmarks.compare.useQuery(
-    { funnelId, vertical: vertical ?? savedVertical ?? '' },
-    { enabled: Boolean(vertical ?? savedVertical) },
-  )
+function BenchmarksContent({ funnelId: _funnelId }: { funnelId: string }) {
+  const [vertical, setVertical] = useState<VerticalSlug | null>(null)
+
+  const { data: benchmarkData, isLoading } = trpc.benchmarks.getForVertical.useQuery()
 
   const setVerticalMutation = trpc.benchmarks.setVertical.useMutation()
   const utils = trpc.useUtils()
 
   function handleSelectVertical(slug: string) {
-    setVertical(slug)
+    const typedSlug = slug as VerticalSlug
+    setVertical(typedSlug)
     setVerticalMutation.mutate(
-      { funnelId, vertical: slug },
-      { onSuccess: () => utils.benchmarks.getVertical.invalidate({ funnelId }) },
+      { vertical: typedSlug },
+      { onSuccess: () => utils.benchmarks.getForVertical.invalidate() },
     )
   }
 
+  const savedVertical = benchmarkData?.vertical ?? null
   const activeVertical = vertical ?? savedVertical
 
   if (!activeVertical) {
@@ -277,7 +277,7 @@ function BenchmarksContent({ funnelId }: { funnelId: string }) {
     return <BenchmarksSkeleton />
   }
 
-  const metrics = (benchmarkData?.metrics ?? []) as BenchmarkMetric[]
+  const metrics = (benchmarkData?.benchmarks ?? []) as unknown as BenchmarkMetric[]
 
   return (
     <div className="rounded-lg border bg-card p-5">

@@ -7,7 +7,7 @@ import { Building2, Users, GitBranch, Plug } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function AdminOrgsClient() {
-  const { data: orgs, isLoading } = trpc.admin.listOrganizations.useQuery()
+  const { data: orgs, isLoading } = trpc.admin.listOrganizations.useQuery({})
 
   return (
     <div className="space-y-6">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, CreditCard, Bell, FileText, Key, Webhook, Shield, ScrollText } from 'lucide-react'
+import { Users, CreditCard, Bell, FileText, Key, Webhook, Shield, ScrollText, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const settingsLinks = [
@@ -14,6 +14,7 @@ const settingsLinks = [
   { href: '/settings/api', label: 'API Keys', icon: Key, description: 'Chaves de acesso à API pública' },
   { href: '/settings/webhooks', label: 'Webhooks', icon: Webhook, description: 'Endpoints e eventos em tempo real' },
   { href: '/settings/audit', label: 'Auditoria', icon: ScrollText, description: 'Log de ações da organização' },
+  { href: '/settings/sso', label: 'SSO', icon: Lock, description: 'Single Sign-On via SAML 2.0 (Enterprise)' },
 ]
 
 export default function SettingsPage() {

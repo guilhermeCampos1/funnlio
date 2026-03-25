@@ -17,14 +17,14 @@ export function AdminOverviewClient() {
         <MetricCard
           icon={DollarSign}
           label="MRR Estimado"
-          value={overview ? `R$ ${((overview.totalOrgs ?? 0) * 147).toLocaleString('pt-BR')}` : '—'}
+          value={overview ? `R$ ${((overview.totalOrganizations ?? 0) * 147).toLocaleString('pt-BR')}` : '—'}
           color="text-green-600"
           bgColor="bg-green-50"
         />
         <MetricCard
           icon={Users}
           label="Organizações"
-          value={overview?.totalOrgs?.toString() ?? '0'}
+          value={overview?.totalOrganizations?.toString() ?? '0'}
           color="text-blue-600"
           bgColor="bg-blue-50"
         />
@@ -38,7 +38,7 @@ export function AdminOverviewClient() {
         <MetricCard
           icon={AlertTriangle}
           label="Erros (24h)"
-          value={overview?.failedJobsLast24h?.toString() ?? '0'}
+          value={overview?.jobsLast24h?.failed?.toString() ?? '0'}
           color="text-red-600"
           bgColor="bg-red-50"
         />

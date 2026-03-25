@@ -19,6 +19,7 @@ import { benchmarksRouter } from './routers/benchmarks.js'
 import { apiKeysRouter } from './routers/api-keys.js'
 import { webhooksConfigRouter } from './routers/webhooks-config.js'
 import { permissionsRouter } from './routers/permissions.js'
+import { auditLogRouter } from './routers/audit-log.js'
 
 export const appRouter = router({
   funnels: funnelsRouter,
@@ -41,6 +42,7 @@ export const appRouter = router({
   apiKeys: apiKeysRouter,
   webhooksConfig: webhooksConfigRouter,
   permissions: permissionsRouter,
+  auditLog: auditLogRouter,
 })
 
 export type AppRouter = typeof appRouter

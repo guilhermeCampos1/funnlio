@@ -13,8 +13,10 @@ import { FeatureGate } from '@/components/billing/feature-gate'
 interface ApiKey {
   id: string
   name: string
+  keyPrefix: string
   prefix: string
   lastUsedAt: string | null
+  isActive: boolean
   active: boolean
   createdAt: string
 }
@@ -218,10 +220,10 @@ function ApiKeysPageContent() {
         <EmptyState />
       ) : (
         <div className="rounded-lg border bg-card divide-y">
-          {(keys as ApiKey[]).map((key) => (
+          {(keys as unknown as ApiKey[]).map((key) => (
             <div key={key.id} className="flex items-center gap-4 px-5 py-4">
               <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                <Key className={cn('w-4 h-4', key.active ? 'text-primary' : 'text-muted-foreground')} />
+                <Key className={cn('w-4 h-4', key.isActive ? 'text-primary' : 'text-muted-foreground')} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -229,16 +231,16 @@ function ApiKeysPageContent() {
                   <span
                     className={cn(
                       'text-[10px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded-full',
-                      key.active
+                      key.isActive
                         ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
                         : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
                     )}
                   >
-                    {key.active ? 'Ativa' : 'Revogada'}
+                    {key.isActive ? 'Ativa' : 'Revogada'}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
-                  <code className="text-xs text-muted-foreground font-mono">{key.prefix}...</code>
+                  <code className="text-xs text-muted-foreground font-mono">{key.keyPrefix}...</code>
                   <span className="text-xs text-muted-foreground">
                     {key.lastUsedAt
                       ? `Ultimo uso: ${new Date(key.lastUsedAt).toLocaleDateString('pt-BR')}`
@@ -246,7 +248,7 @@ function ApiKeysPageContent() {
                   </span>
                 </div>
               </div>
-              {key.active && (
+              {key.isActive && (
                 <button
                   type="button"
                   onClick={() => {

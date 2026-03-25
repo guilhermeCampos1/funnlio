@@ -16,14 +16,16 @@ interface ReportSectionProps {
 }
 
 function ReportSection({ frequency, title, description, featureGate }: ReportSectionProps) {
-  const { data: settings, isLoading } = trpc.reports.getSettings.useQuery({ frequency })
+  const { data: allSettings, isLoading } = trpc.reports.getSettings.useQuery()
   const upsertSetting = trpc.reports.upsertSetting.useMutation()
   const utils = trpc.useUtils()
 
   const [newEmail, setNewEmail] = useState('')
 
+  const settings = allSettings?.find((s) => s.frequency === frequency)
+
   const enabled = settings?.enabled ?? false
-  const recipients: string[] = settings?.recipients ?? []
+  const recipients: string[] = (settings?.recipients as string[]) ?? []
   const includeInsights = settings?.includeInsights ?? false
   const includeMetrics = settings?.includeMetrics ?? true
   const sendTime = settings?.sendTime ?? '08:00'
@@ -37,7 +39,7 @@ function ReportSection({ frequency, title, description, featureGate }: ReportSec
       includeMetrics: updates.includeMetrics !== undefined ? (updates.includeMetrics as boolean) : includeMetrics,
       sendTime: updates.sendTime !== undefined ? (updates.sendTime as string) : sendTime,
     })
-    utils.reports.getSettings.invalidate({ frequency })
+    utils.reports.getSettings.invalidate()
   }
 
   const handleAddEmail = async () => {
