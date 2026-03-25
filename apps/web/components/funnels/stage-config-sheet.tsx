@@ -79,7 +79,7 @@ export function StageConfigSheet({ stageId, stageName, integrationId, currentCon
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
           <p className="text-sm text-muted-foreground">
-            Selecione quais recursos desta integração você quer monitorar nesta etapa.
+            Selecione quais campanhas ou pipelines esta etapa deve monitorar. Se não selecionar nenhuma, nenhuma métrica será coletada.
           </p>
 
           {isLoading ? (
@@ -88,9 +88,10 @@ export function StageConfigSheet({ stageId, stageName, integrationId, currentCon
               <span className="ml-2 text-sm text-muted-foreground">Carregando recursos...</span>
             </div>
           ) : sections.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">
-              Nenhum recurso disponível para seleção nesta integração.
-            </p>
+            <div className="text-sm text-muted-foreground py-4 space-y-2">
+              <p>Nenhuma campanha ou pipeline encontrado.</p>
+              <p className="text-xs">Isso pode acontecer se a integração não está conectada corretamente ou se não há campanhas ativas na ferramenta.</p>
+            </div>
           ) : (
             sections.map((section) => (
               <div key={section.type} className="space-y-2">

@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Check, ChevronLeft } from 'lucide-react'
+import { X, ChevronLeft, Shield } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
+import { HelpDrawer } from '@/components/ui/help-drawer'
+import { getFieldGuide } from '@/lib/provider-guides'
 
 interface Props {
   onClose: () => void
@@ -16,6 +18,14 @@ const categoryLabels: Record<string, string> = {
   heatmap: 'Heatmap',
   email: 'Email',
   other: 'Outro',
+}
+
+const categoryDescriptions: Record<string, string> = {
+  ads: 'Métricas de campanhas pagas (impressões, cliques, custo, leads)',
+  crm: 'Dados de pipeline de vendas (leads, negócios, receita)',
+  analytics: 'Dados de tráfego e comportamento do site',
+  heatmap: 'Mapas de calor, scroll depth e comportamento visual',
+  email: 'Métricas de email marketing (aberturas, cliques)',
 }
 
 export function ConnectIntegrationSheet({ onClose }: Props) {
@@ -103,7 +113,8 @@ export function ConnectIntegrationSheet({ onClose }: Props) {
           {step === 'select' ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Selecione a ferramenta que deseja conectar ao Funnlio.
+                Conecte uma ferramenta para o Funnlio coletar métricas automaticamente.
+                Você precisará de credenciais de acesso — cada ferramenta tem um guia passo-a-passo na próxima tela.
               </p>
               <div className="space-y-2">
                 {providers.map((provider) => (
@@ -115,7 +126,7 @@ export function ConnectIntegrationSheet({ onClose }: Props) {
                     <div className="flex-1">
                       <p className="font-medium text-sm">{provider.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {categoryLabels[provider.category] ?? provider.category}
+                        {categoryDescriptions[provider.category] ?? categoryLabels[provider.category] ?? provider.category}
                       </p>
                     </div>
                   </button>
@@ -124,9 +135,22 @@ export function ConnectIntegrationSheet({ onClose }: Props) {
             </>
           ) : (
             <>
+              {/* Microcopy de contexto */}
+              <div className="rounded-md bg-muted/50 border p-3 space-y-1">
+                <p className="text-xs text-foreground font-medium">
+                  Preencha as credenciais abaixo para conectar o {selectedProvider?.name}.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Não sabe onde encontrar? Clique em "Como obter?" abaixo de cada campo.
+                </p>
+              </div>
+
               {/* Nome da conexão */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Nome da conexão *</label>
+                <p className="text-xs text-muted-foreground">
+                  Um nome para identificar esta conexão (ex: "Meta Ads - Conta Principal")
+                </p>
                 <input
                   type="text"
                   value={name}
@@ -136,25 +160,46 @@ export function ConnectIntegrationSheet({ onClose }: Props) {
                 />
               </div>
 
-              {/* Campos dinâmicos do provider */}
-              {configFields.map((field) => (
-                <div key={field.key} className="space-y-1.5">
-                  <label className="text-sm font-medium">
-                    {field.label}
-                    {field.required && ' *'}
-                  </label>
-                  {field.helpText && (
-                    <p className="text-xs text-muted-foreground">{field.helpText}</p>
-                  )}
-                  <input
-                    type={field.type === 'password' ? 'password' : 'text'}
-                    value={credentials[field.key] ?? ''}
-                    onChange={(e) => handleCredentialChange(field.key, e.target.value)}
-                    placeholder={field.placeholder ?? ''}
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </div>
-              ))}
+              {/* Campos dinâmicos do provider com guias */}
+              {configFields.map((field) => {
+                const guide = selectedProvider
+                  ? getFieldGuide(selectedProvider.slug, field.key)
+                  : null
+
+                return (
+                  <div key={field.key} className="space-y-1.5">
+                    <label className="text-sm font-medium">
+                      {field.label}
+                      {field.required && ' *'}
+                    </label>
+                    {field.helpText && (
+                      <p className="text-xs text-muted-foreground">{field.helpText}</p>
+                    )}
+                    <input
+                      type={field.type === 'password' ? 'password' : 'text'}
+                      value={credentials[field.key] ?? ''}
+                      onChange={(e) => handleCredentialChange(field.key, e.target.value)}
+                      placeholder={field.placeholder ?? ''}
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    {guide && (
+                      <HelpDrawer
+                        steps={guide.steps}
+                        link={guide.link}
+                        note={guide.note}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Security note */}
+              <div className="flex items-start gap-2 rounded-md bg-green-50 border border-green-200 p-3">
+                <Shield className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-green-800">
+                  Suas credenciais são criptografadas com AES-256 antes de serem salvas. Nunca são exibidas após a conexão.
+                </p>
+              </div>
 
               {error && (
                 <p className="text-sm text-destructive bg-destructive/10 rounded-md p-3">
@@ -179,7 +224,7 @@ export function ConnectIntegrationSheet({ onClose }: Props) {
               disabled={!canSubmit}
               className="flex-1 py-2 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
-              {connect.isPending ? 'Conectando...' : 'Conectar'}
+              {connect.isPending ? 'Validando e conectando...' : 'Conectar'}
             </button>
           </div>
         )}

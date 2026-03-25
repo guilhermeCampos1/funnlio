@@ -8,6 +8,8 @@ import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
 import { AddStageSheet } from './add-stage-sheet'
 import { StageConfigSheet } from './stage-config-sheet'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
+import { getMetricTooltip } from '@/lib/metric-definitions'
 
 interface Stage {
   id: string
@@ -192,17 +194,20 @@ export function FunnelStageList({ stages, funnelId }: FunnelStageListProps) {
                   <div className="flex flex-col items-center gap-0.5">
                     <ArrowDown className="w-4 h-4 text-muted-foreground" />
                     {stage.conversionRateFromPrevious !== null && (
-                      <span
-                        className={cn(
-                          'text-xs font-medium px-2 py-0.5 rounded-full',
-                          stage.conversionRateFromPrevious >= 50
-                            ? 'bg-green-100 text-green-700'
-                            : stage.conversionRateFromPrevious >= 20
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-red-100 text-red-700'
-                        )}
-                      >
-                        {stage.conversionRateFromPrevious.toFixed(1)}% conversão
+                      <span className="flex items-center gap-1">
+                        <span
+                          className={cn(
+                            'text-xs font-medium px-2 py-0.5 rounded-full',
+                            stage.conversionRateFromPrevious >= 50
+                              ? 'bg-green-100 text-green-700'
+                              : stage.conversionRateFromPrevious >= 20
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-red-100 text-red-700'
+                          )}
+                        >
+                          {stage.conversionRateFromPrevious.toFixed(1)}% conversão
+                        </span>
+                        <HelpTooltip text="Percentual que passou da etapa anterior para esta. Ex: 1.000 viram o anúncio, 100 clicaram = 10%." />
                       </span>
                     )}
                   </div>
@@ -269,22 +274,28 @@ export function FunnelStageList({ stages, funnelId }: FunnelStageListProps) {
                 {/* Métricas */}
                 {stage.metrics.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {stage.metrics.map((metric) => (
-                      <div
-                        key={metric.key}
-                        className={cn(
-                          'rounded-md p-3 space-y-0.5',
-                          metric.isPrimary ? 'bg-primary/5 border border-primary/20' : 'bg-muted/50'
-                        )}
-                      >
-                        <p className="text-xs text-muted-foreground">{metric.label}</p>
-                        <p className={cn('font-bold', metric.isPrimary ? 'text-lg' : 'text-base')}>
-                          {metric.value !== null
-                            ? formatMetricValue(metric.value, metric.type)
-                            : '—'}
-                        </p>
-                      </div>
-                    ))}
+                    {stage.metrics.map((metric) => {
+                      const tooltip = getMetricTooltip(metric.key)
+                      return (
+                        <div
+                          key={metric.key}
+                          className={cn(
+                            'rounded-md p-3 space-y-0.5',
+                            metric.isPrimary ? 'bg-primary/5 border border-primary/20' : 'bg-muted/50'
+                          )}
+                        >
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground">{metric.label}</p>
+                            {tooltip && <HelpTooltip text={tooltip} side="right" />}
+                          </div>
+                          <p className={cn('font-bold', metric.isPrimary ? 'text-lg' : 'text-base')}>
+                            {metric.value !== null
+                              ? formatMetricValue(metric.value, metric.type)
+                              : '—'}
+                          </p>
+                        </div>
+                      )
+                    })}
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground">

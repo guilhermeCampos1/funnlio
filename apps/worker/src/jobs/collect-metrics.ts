@@ -10,7 +10,8 @@ import {
   and,
 } from '@funnlio/db'
 import { getProvider } from '@funnlio/integrations'
-import { getDateRange, decryptCredentials } from '@funnlio/shared'
+import { getDateRange } from '@funnlio/shared'
+import { decryptCredentials } from '@funnlio/shared/crypto'
 
 export interface CollectMetricsPayload {
   jobId: string          // ID do sync_job no banco

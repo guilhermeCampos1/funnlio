@@ -68,19 +68,31 @@ export function IntegrationsPageClient() {
         </div>
 
         {integrations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-            <Plug className="w-10 h-10 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">Nenhuma integração conectada</h3>
-            <p className="text-muted-foreground text-sm mt-1 max-w-sm">
-              Conecte suas ferramentas de marketing para começar a coletar métricas automaticamente.
-            </p>
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Conectar primeira ferramenta
-            </button>
+          <div className="rounded-lg border border-dashed p-8 space-y-6">
+            <div className="text-center">
+              <Plug className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <h3 className="text-lg font-medium">Conecte suas ferramentas de marketing</h3>
+              <p className="text-muted-foreground text-sm mt-1 max-w-md mx-auto">
+                Integrações são a ponte entre suas ferramentas e o Funnlio. Sem exportar planilhas, sem copiar dados — tudo automático.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-3">Comece pela ferramenta que você mais usa:</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {providers.map((provider) => (
+                  <button
+                    key={provider.id}
+                    onClick={() => {
+                      setSheetOpen(true)
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border text-sm hover:bg-muted transition-colors"
+                  >
+                    {provider.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

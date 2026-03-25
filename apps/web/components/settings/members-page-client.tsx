@@ -66,7 +66,7 @@ export function MembersPageClient() {
       <form onSubmit={handleInvite} className="rounded-lg border bg-card p-5 space-y-4">
         <h2 className="font-medium text-sm">Adicionar membro</h2>
         <p className="text-xs text-muted-foreground">
-          O usuário precisa já ter uma conta no Funnlio.
+          O convidado precisa já ter uma conta no Funnlio e terá acesso a todos os funis desta organização.
         </p>
 
         <div className="flex gap-2">
@@ -82,8 +82,8 @@ export function MembersPageClient() {
             onChange={(e) => setRole(e.target.value as 'admin' | 'viewer')}
             className="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <option value="viewer">Visualizador</option>
-            <option value="admin">Admin</option>
+            <option value="viewer">Visualizador (apenas leitura)</option>
+            <option value="admin">Admin (cria funis e integrações)</option>
           </select>
           <button
             type="submit"

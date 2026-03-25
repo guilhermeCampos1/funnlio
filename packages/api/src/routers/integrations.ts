@@ -6,7 +6,7 @@ import {
   and,
 } from '@funnlio/db'
 import { getProvider, getAllProviders } from '@funnlio/integrations'
-import { encryptCredentials, decryptCredentials } from '@funnlio/shared'
+import { encryptCredentials, decryptCredentials } from '@funnlio/shared/crypto'
 
 export const integrationsRouter = router({
   // ─── Listar providers disponíveis (catálogo global) ───────────────────────

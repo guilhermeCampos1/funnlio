@@ -25,4 +25,7 @@ export const api = {
   organizations: {
     hasOrg: { query: async () => (await createServerClient()).organizations.hasOrg.query() },
   },
+  integrations: {
+    list: { query: async () => (await createServerClient()).integrations.list.query() },
+  },
 }
