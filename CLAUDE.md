@@ -139,6 +139,22 @@ funnlio/
 - **tRPC** — usar `protectedProcedure` para rotas autenticadas, `ownerAdminProcedure` para ações destrutivas, `adminProcedure` para o painel SaaS
 - **Verificação de org** — toda query que acessa dados deve filtrar por `organizationId` da sessão
 - **Sem plain text de credenciais** — ao implementar connect de integração, usar AES-256 encrypt antes de salvar
+- **Crypto separado do frontend** — `encryptCredentials`/`decryptCredentials` vivem em `@funnlio/shared/crypto` (subpath export). NUNCA importar via `@funnlio/shared` direto, pois `node:crypto` não roda no browser
+
+---
+
+## Convenções de Billing e Feature Gating (Fase 2+)
+
+- **Billing é por organização** — Stripe Customer = Organization (não User)
+- **Planos:** free, starter, pro, enterprise (enum no schema)
+- **Trial:** 14 dias com acesso Pro → expira para Free (dados congelados)
+- **Plan limits** — centralizar em `packages/shared/src/constants/plan-limits.ts`
+- **Feature gates** — centralizar em `packages/shared/src/constants/feature-gates.ts`
+- **Enforcement** — middleware tRPC `enforcePlanLimits` intercepta mutations e retorna `PLAN_LIMIT_REACHED`
+- **No frontend** — usar componente `FeatureGate` wrapper: se tem acesso renderiza children, se não renderiza `LockedFeatureOverlay` com blur + CTA
+- **Upgrade flow** — sempre via Stripe Checkout hosted (não embedded)
+- **Webhooks Stripe** — handler em `apps/web/app/api/webhooks/stripe/route.ts` com verificação de assinatura
+- **Nunca bloquear sem contexto** — todo limite atingido deve mostrar VALOR do próximo plano, não erro genérico
 
 ---
 

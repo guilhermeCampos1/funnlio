@@ -291,37 +291,155 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 
 ---
 
-### FASE 2 — Expansão de Integrações
+### FASE 2 — Revenue & Retention Engine ← **PRÓXIMA**
 
-- [ ] Provider **Google Ads** — implementação completa (OAuth2 + Google Ads API v18)
-- [ ] Provider **Google Analytics 4** — implementação completa (OAuth2 + Data API v1)
-- [ ] Provider **Microsoft Clarity** — implementação completa (API v1)
-- [ ] Alertas por email quando métrica cai abaixo de threshold configurado
-- [ ] Exportação de relatório do funil em PDF
-- [ ] Exportação de dados em CSV
+**Objetivo:** Monetizar, reter, criar loops de engagement. Sem isso não há negócio.
+
+**Modelo de pricing (Reed Richards / Pricing Triangle):**
+
+| Plano | Mensal | Anual | Funis | Integrações | Sync | Membros | Histórico |
+|-------|--------|-------|-------|-------------|------|---------|-----------|
+| Free (pós-trial) | R$0 | — | 1 (read-only) | 1 | Pausado | 1 | 30d |
+| Starter | R$97 | R$77 | 10 | 5 | 4h | 3 | 6m |
+| Pro | R$247 | R$197 | 50 | 20 | 1h | 10 | 24m |
+| Enterprise | R$697 | R$557 | Ilim. | Ilim. | 15min | Ilim. | Ilim. |
+
+**Trial:** 14 dias com acesso Pro completo → expira para Free Limitado (dados congelados).
+
+#### 2.1 Billing & Stripe (PRIORIDADE MÁXIMA)
+- [ ] Schema Drizzle: `subscriptions`, `invoices`, `plan_limits`
+- [ ] Criar Products/Prices no Stripe (Starter/Pro/Enterprise × mensal/anual)
+- [ ] Webhook handler `/api/webhooks/stripe` (checkout.completed, subscription.*, invoice.*, trial_will_end)
+- [ ] Router tRPC `billing` (getSubscription, createCheckout, createPortalSession, getInvoices, getPlanLimits, getUsage)
+- [ ] Página `/settings/billing` com PlanComparisonTable, CurrentPlanCard, UsageMeters, BillingToggle, InvoiceHistory
+- [ ] Upgrade flow: Checkout → Stripe → Webhook → DB → Redirect com success
+- [ ] Downgrade flow: Modal confirmação → Customer Portal → Webhook → Pausa funis excedentes
+- [ ] Cancelamento 3 passos: motivo → dados que perde → oferta retenção → cancelAtPeriodEnd
+- [ ] Trial 14 dias: setar trialEndsAt no signup, countdown no header
+- [ ] Downgrade automático Free pós-trial (webhook trial_will_end)
+- [ ] Seed: popular plan_limits
+
+#### 2.2 Feature Gating & Upgrade Mechanics
+- [ ] Constantes `FEATURE_GATES` e `PLAN_LIMITS` em shared
+- [ ] Componente `FeatureGate` wrapper (verifica plano → children ou LockedFeatureOverlay)
+- [ ] `LockedFeatureOverlay` (preview blur + badge plano + valor + CTA upgrade)
+- [ ] `UsageMeter` (barra verde/amarelo/vermelho), `LimitReachedModal`, `SoftLimitBanner`
+- [ ] Middleware tRPC `enforcePlanLimits` (intercepta mutations, retorna PLAN_LIMIT_REACHED)
+- [ ] 9 pontos de upsell contextual (dashboard, funil, integrações, alertas, export, membros, email, detalhe, trial)
+
+#### 2.3 Value Dashboard — "Seu Mês em Números"
+- [ ] Card no dashboard: receita rastreada, horas economizadas, gargalos identificados, dias de dados
+- [ ] Cálculos: sum currency metrics, (etapas×funis×syncs×5min)/60, etapas conv <20%, diff first snapshot
+- [ ] Upsell contextual baseado no plano
+
+#### 2.4 Insights Automáticos
+- [ ] Schema `insights` (orgId, funnelId, type, title, severity, readAt)
+- [ ] Worker job `detect-insights`: CONVERSION_DROP, CONVERSION_SPIKE, FUNNEL_BOTTLENECK, SPEND_ANOMALY, MILESTONE
+- [ ] Card "Insights da Semana" no dashboard (top 3)
+- [ ] Feature gate: Free (0), Starter (básicos), Pro (todos + alertas)
+
+#### 2.5 Alertas por Email
+- [ ] Schema `alert_settings` (orgId, type, enabled, channels)
+- [ ] Worker: processAlerts após cada sync
+- [ ] Templates React Email + Resend
+- [ ] Config on/off por tipo na UI
+
+#### 2.6 Exportação
+- [ ] CSV (Starter+) com marca d'água no Starter
+- [ ] PDF (Pro+) com layout profissional
+- [ ] Feature gate no botão exportar
+
+#### 2.7 Providers Completos
+- [ ] Provider **Google Ads** — OAuth2 + Google Ads API (estender BaseProvider)
+- [ ] Provider **Google Analytics 4** — OAuth2 + Data API v1
+- [ ] Provider **Microsoft Clarity** — API v1
+
+#### 2.8 Emails de Trial (sequência de 8)
+- [ ] Dia 1: boas-vindas + guia First Value
+- [ ] Dia 3: "Já viu suas conversões?" (condicional)
+- [ ] Dia 7: features não usadas
+- [ ] Dia 11: "3 dias restantes"
+- [ ] Dia 13: "Último dia amanhã + 20% desconto"
+- [ ] Dia 14: "Trial encerrado, dados congelados"
+- [ ] Dia 21: "Sentimos sua falta"
+- [ ] Dia 60: "Última chance: dados removidos em 30 dias"
+
+#### 2.9 Trial Banners Progressivos
+- [ ] Dias 1-7 azul, 8-11 amarelo, 12-13 laranja, 14 vermelho
+- [ ] TrialProgressCard com features não experimentadas
 
 ---
 
-### FASE 3 — Admin Panel e Growth
+### FASE 3 — Engagement & Expansion
 
-- [ ] Páginas do admin (`/admin/overview`, `/admin/organizations`, `/admin/jobs`)
-- [ ] Gráficos de MRR / churn no admin
-- [ ] Billing com Stripe (planos + checkout + webhooks)
-- [ ] Comparação de períodos (este mês vs. mês anterior)
-- [ ] Link público do funil (somente leitura, sem login)
-- [ ] Comentários/notas por etapa
-- [ ] Notificações via Slack webhook
+**Objetivo:** Aumentar ARPA, stickiness, loops de reengajamento.
+
+#### 3.1 Relatórios Automáticos por Email
+- [ ] Daily digest (Starter+): cron 8h, métricas do dia
+- [ ] Weekly summary (Starter+): segunda 8h, semana vs anterior, top 3 insights
+- [ ] Monthly report (Pro+): dia 1, gráficos server-side, tendências, PDF exportável
+- [ ] Config UI: frequência, tipos habilitados, unsubscribe granular
+
+#### 3.2 Comparação de Períodos (Pro+)
+- [ ] Seletor duplo na UI (período A vs B)
+- [ ] Cálculo delta por etapa + highlight melhoras/pioras
+- [ ] Feature gate com preview blur para Starter
+
+#### 3.3 Comentários em Etapas (Pro+)
+- [ ] Schema `comments` + UI no detalhe da etapa + notificações
+
+#### 3.4 Link Público de Dashboard (Pro+)
+- [ ] Link com token único, página read-only, config métricas/período/expiração, branding Funnlio (removível Enterprise)
+
+#### 3.5 Integração Slack (Pro+)
+- [ ] OAuth flow + seleção de canal + alertas como Slack blocks
+
+#### 3.6 Admin Panel (Dono do SaaS)
+- [ ] Dashboard: MRR, churn rate, assinantes por plano, trial→paid conversion
+- [ ] Lista orgs com status, plano, uso, última atividade
+- [ ] C.H.I. visual (Purple/Green/Yellow/Red)
+- [ ] Growth Ceiling calculator (4-Number Formula)
+
+#### 3.7 Customer Health Index
+- [ ] Cálculo por org: login frequency, features usadas, funis ativos, integrations, membros ativos
+- [ ] Segmentação: Purple (>90) / Green (70-90) / Yellow (40-70) / Red (<40)
+- [ ] Alerta quando org vira Red
 
 ---
 
-### FASE 4 — Enterprise
+### FASE 4 — Scale & Moat
 
-- [ ] SSO (SAML 2.0 / OIDC)
-- [ ] API pública REST com autenticação por API key
-- [ ] Webhooks para clientes (receber atualizações de métricas)
-- [ ] White-label (domínio customizado)
-- [ ] Histórico de auditoria avançado na UI
-- [ ] SLA garantido + suporte dedicado
+**Objetivo:** Enterprise, automação avançada, barreiras de saída.
+
+#### 4.1 Benchmarks (Pro+)
+- [ ] Agregação anônima por vertical (ecommerce, infoproduto, SaaS, serviço)
+- [ ] "Sua taxa vs média" em cada etapa + benchmark próprio entre funis
+
+#### 4.2 SSO/SAML (Enterprise)
+- [ ] Integração SAML (Okta, Azure AD, Google Workspace) + auto-provisioning
+
+#### 4.3 API Pública REST (Enterprise)
+- [ ] Endpoints (funis, métricas, etapas) + API keys + rate limiting + docs OpenAPI
+
+#### 4.4 Webhooks (Enterprise)
+- [ ] Config endpoints + eventos (métrica coletada, alerta, funil criado) + retry + log
+
+#### 4.5 White-label (Enterprise)
+- [ ] Logo, cores, domínio custom, remoção branding, emails com remetente custom
+
+#### 4.6 Auditoria (Enterprise)
+- [ ] Log de ações + UI audit trail + filtros + exportação
+
+#### 4.7 Retenção Avançada
+- [ ] Email "sentimos sua falta" (7d inativo)
+- [ ] Email "dados expiram em X dias" por plano
+- [ ] Oferta pausa de conta (1 mês) no cancelamento
+- [ ] Circle of Trust: review → case study → referral
+
+#### 4.8 Colaboração Avançada
+- [ ] Permissões granulares (Viewer, Editor, Admin)
+- [ ] Convite "clientes" como Viewers externos (Pro+)
+- [ ] Activity feed + menções (@membro)
 
 ---
 
