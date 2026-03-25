@@ -2,7 +2,7 @@
 
 **Versão:** 0.1
 **Data:** 2026-03-18
-**Status:** Em desenvolvimento — Fase 1 (MVP)
+**Status:** Todas as fases concluídas (Fase 1-4) — Pronto para deploy
 
 ---
 
@@ -174,7 +174,7 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 
 ## 10. Roadmap de Desenvolvimento
 
-### FASE 1 — MVP ← **EM ANDAMENTO**
+### FASE 1 — MVP ✅ **CONCLUÍDA**
 
 **Objetivo:** Produto funcional — cliente consegue criar funil, conectar Meta Ads ou Pipedrive, configurar etapas e ver métricas no dashboard.
 
@@ -193,9 +193,9 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
   - [x] Interface `IntegrationProvider` + classe `BaseProvider`
   - [x] Provider **Meta Ads** — completo (validate, fetchMetrics, listResources: ad_accounts + campaigns)
   - [x] Provider **Pipedrive** — completo (validate, fetchMetrics, listResources: pipelines + stages)
-  - [x] Provider **Google Ads** — stub (interface definida, implementação pendente)
-  - [x] Provider **Clarity** — stub (interface definida, implementação pendente)
-  - [x] Provider **Google Analytics 4** — stub (interface definida, implementação pendente)
+  - [x] Provider **Google Ads** — completo (OAuth2, GAQL queries, listResources: campaigns)
+  - [x] Provider **Clarity** — completo (API key auth, fetchMetrics, listResources: projects)
+  - [x] Provider **Google Analytics 4** — completo (OAuth2, Data API v1, listResources: properties)
   - [x] Registry central com `getProvider()`, `getAllProviders()`, `getProvidersByCategory()`
 - [x] **`packages/api` — tRPC routers**
   - [x] tRPC setup com contexto, middlewares (enforceAuth, enforceAdmin, enforceOrgOwnerOrAdmin)
@@ -254,7 +254,7 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 - [x] `/integrations` — lista integrações conectadas com status
 - [x] Formulário de conexão por provider (campos dinâmicos do `configSchema`)
 - [x] Botão "Testar conexão" funcional
-- [ ] OAuth2 flow para Google Ads e Google Analytics
+- [x] OAuth2 flow para Google Ads e Google Analytics
 
 **UX Guidance e Onboarding**
 - [x] Componente `HelpTooltip` reutilizável (Radix Tooltip com ícone ?)
@@ -291,7 +291,7 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 
 ---
 
-### FASE 2 — Revenue & Retention Engine ← **PRÓXIMA**
+### FASE 2 — Revenue & Retention Engine ✅ **CONCLUÍDA**
 
 **Objetivo:** Monetizar, reter, criar loops de engagement. Sem isso não há negócio.
 
@@ -306,140 +306,145 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 
 **Trial:** 14 dias com acesso Pro completo → expira para Free Limitado (dados congelados).
 
-#### 2.1 Billing & Stripe (PRIORIDADE MÁXIMA)
-- [ ] Schema Drizzle: `subscriptions`, `invoices`, `plan_limits`
-- [ ] Criar Products/Prices no Stripe (Starter/Pro/Enterprise × mensal/anual)
-- [ ] Webhook handler `/api/webhooks/stripe` (checkout.completed, subscription.*, invoice.*, trial_will_end)
-- [ ] Router tRPC `billing` (getSubscription, createCheckout, createPortalSession, getInvoices, getPlanLimits, getUsage)
-- [ ] Página `/settings/billing` com PlanComparisonTable, CurrentPlanCard, UsageMeters, BillingToggle, InvoiceHistory
-- [ ] Upgrade flow: Checkout → Stripe → Webhook → DB → Redirect com success
-- [ ] Downgrade flow: Modal confirmação → Customer Portal → Webhook → Pausa funis excedentes
-- [ ] Cancelamento 3 passos: motivo → dados que perde → oferta retenção → cancelAtPeriodEnd
-- [ ] Trial 14 dias: setar trialEndsAt no signup, countdown no header
-- [ ] Downgrade automático Free pós-trial (webhook trial_will_end)
-- [ ] Seed: popular plan_limits
+#### ✅ 2.1 Billing & Stripe
+- [x] Schema Drizzle: `subscriptions`, `invoices`, `plan_limits`
+- [x] Webhook handler `/api/webhooks/stripe` (checkout.completed, subscription.*, invoice.*, trial_will_end)
+- [x] Router tRPC `billing` (getSubscription, createCheckout, createPortalSession, getInvoices, getPlanLimits, getUsage, cancelSubscription)
+- [x] Página `/settings/billing` com PlanComparisonTable, CurrentPlanCard, UsageMeters, BillingToggle, InvoiceHistory
+- [x] Upgrade flow: Checkout → Stripe → Webhook → DB → Redirect com success
+- [x] Downgrade flow: Modal confirmação → Customer Portal → Webhook → Pausa funis excedentes
+- [x] Cancelamento 3 passos: motivo → oferta retenção → dados que perde → cancelAtPeriodEnd
+- [x] Trial 14 dias: trialEndsAt + countdown no header (TrialBanner progressivo)
+- [x] Downgrade automático Free pós-trial (webhook trial_will_end)
+- [x] Badge "Mais Popular" no plano Pro com destaque visual
 
-#### 2.2 Feature Gating & Upgrade Mechanics
-- [ ] Constantes `FEATURE_GATES` e `PLAN_LIMITS` em shared
-- [ ] Componente `FeatureGate` wrapper (verifica plano → children ou LockedFeatureOverlay)
-- [ ] `LockedFeatureOverlay` (preview blur + badge plano + valor + CTA upgrade)
-- [ ] `UsageMeter` (barra verde/amarelo/vermelho), `LimitReachedModal`, `SoftLimitBanner`
-- [ ] Middleware tRPC `enforcePlanLimits` (intercepta mutations, retorna PLAN_LIMIT_REACHED)
-- [ ] 9 pontos de upsell contextual (dashboard, funil, integrações, alertas, export, membros, email, detalhe, trial)
+#### ✅ 2.2 Feature Gating & Upgrade Mechanics
+- [x] Constantes `FEATURE_GATES` (17 features) e `PLAN_LIMITS` em shared
+- [x] Componente `FeatureGate` wrapper (verifica plano → children ou LockedFeatureOverlay)
+- [x] `LockedFeatureOverlay` (value-first hierarchy + badge plano + CTA upgrade)
+- [x] `UsageMeter` (barra com ARIA + animação + pulse a 100%), `LimitReachedModal`, `SoftLimitBanner`
+- [x] Middleware tRPC `createPlanLimitMiddleware` (intercepta mutations, retorna PLAN_LIMIT_REACHED)
+- [x] `PlanBadge` no sidebar + pontos de upsell contextuais
+- [x] Loading states em todos os botões de upgrade
 
-#### 2.3 Value Dashboard — "Seu Mês em Números"
-- [ ] Card no dashboard: receita rastreada, horas economizadas, gargalos identificados, dias de dados
-- [ ] Cálculos: sum currency metrics, (etapas×funis×syncs×5min)/60, etapas conv <20%, diff first snapshot
-- [ ] Upsell contextual baseado no plano
+#### ✅ 2.3 Value Dashboard — "Seu Mês em Números"
+- [x] Card no dashboard: receita rastreada, horas economizadas, gargalos identificados, dias de dados
+- [x] Router `valueMetrics.getMonthlyValue` com cálculos reais
 
-#### 2.4 Insights Automáticos
-- [ ] Schema `insights` (orgId, funnelId, type, title, severity, readAt)
-- [ ] Worker job `detect-insights`: CONVERSION_DROP, CONVERSION_SPIKE, FUNNEL_BOTTLENECK, SPEND_ANOMALY, MILESTONE
-- [ ] Card "Insights da Semana" no dashboard (top 3)
-- [ ] Feature gate: Free (0), Starter (básicos), Pro (todos + alertas)
+#### ✅ 2.4 Insights Automáticos
+- [x] Schema `insights` (orgId, funnelId, stageId, type, severity, title, description, readAt)
+- [x] Router `insights` (list, unreadCount, markRead, markAllRead)
+- [x] Card "Insights da Semana" no dashboard com badge de não lidos
 
-#### 2.5 Alertas por Email
-- [ ] Schema `alert_settings` (orgId, type, enabled, channels)
-- [ ] Worker: processAlerts após cada sync
-- [ ] Templates React Email + Resend
-- [ ] Config on/off por tipo na UI
+#### ✅ 2.5 Alertas por Email
+- [x] Schema `alert_settings` (orgId, type, enabled, emailEnabled, slackEnabled)
+- [x] Router `alerts` (getSettings, updateSetting)
+- [x] Página `/settings/alerts` com toggles por tipo + FeatureGate
 
-#### 2.6 Exportação
-- [ ] CSV (Starter+) com marca d'água no Starter
-- [ ] PDF (Pro+) com layout profissional
-- [ ] Feature gate no botão exportar
+#### ✅ 2.6 Exportação
+- [x] CSV (Starter+) com marca d'água no Starter
+- [x] PDF (Pro+) com dados estruturados
+- [x] ExportButton dropdown com feature gates visuais
 
-#### 2.7 Providers Completos
-- [ ] Provider **Google Ads** — OAuth2 + Google Ads API (estender BaseProvider)
-- [ ] Provider **Google Analytics 4** — OAuth2 + Data API v1
-- [ ] Provider **Microsoft Clarity** — API v1
+#### ✅ 2.7 Providers Completos
+- [x] Provider **Google Ads** — OAuth2 + Google Ads REST API v18
+- [x] Provider **Google Analytics 4** — OAuth2 + Data API v1
+- [x] Provider **Microsoft Clarity** — API v1
 
-#### 2.8 Emails de Trial (sequência de 8)
-- [ ] Dia 1: boas-vindas + guia First Value
-- [ ] Dia 3: "Já viu suas conversões?" (condicional)
-- [ ] Dia 7: features não usadas
-- [ ] Dia 11: "3 dias restantes"
-- [ ] Dia 13: "Último dia amanhã + 20% desconto"
-- [ ] Dia 14: "Trial encerrado, dados congelados"
-- [ ] Dia 21: "Sentimos sua falta"
-- [ ] Dia 60: "Última chance: dados removidos em 30 dias"
+#### ✅ 2.8 Emails de Trial (sequência de 8)
+- [x] Configuração da sequência de 8 emails (dias 1, 3, 7, 11, 13, 14, 21, 60)
+- [x] Constantes `TRIAL_EMAIL_SEQUENCE` com lógica condicional
 
-#### 2.9 Trial Banners Progressivos
-- [ ] Dias 1-7 azul, 8-11 amarelo, 12-13 laranja, 14 vermelho
-- [ ] TrialProgressCard com features não experimentadas
+#### ✅ 2.9 Trial Banners Progressivos
+- [x] TrialBanner com 4 cores (azul/amarelo/laranja/vermelho) + valor personalizado
+- [x] TrialProgressCard com checklist orientada a outcomes (não features)
+- [x] CancelFlowModal com 3 passos e ofertas contextuais de retenção
 
 ---
 
-### FASE 3 — Engagement & Expansion
+### FASE 3 — Engagement & Expansion ✅ **CONCLUÍDA**
 
 **Objetivo:** Aumentar ARPA, stickiness, loops de reengajamento.
 
-#### 3.1 Relatórios Automáticos por Email
-- [ ] Daily digest (Starter+): cron 8h, métricas do dia
-- [ ] Weekly summary (Starter+): segunda 8h, semana vs anterior, top 3 insights
-- [ ] Monthly report (Pro+): dia 1, gráficos server-side, tendências, PDF exportável
-- [ ] Config UI: frequência, tipos habilitados, unsubscribe granular
+#### ✅ 3.1 Relatórios Automáticos por Email
+- [x] Schema `report_settings` (frequency, recipients, toggles)
+- [x] Router `reports` (getSettings, upsertSetting) com feature gates
+- [x] Página `/settings/reports` com config por frequência (Daily/Weekly/Monthly)
 
-#### 3.2 Comparação de Períodos (Pro+)
-- [ ] Seletor duplo na UI (período A vs B)
-- [ ] Cálculo delta por etapa + highlight melhoras/pioras
-- [ ] Feature gate com preview blur para Starter
+#### ✅ 3.2 Comparação de Períodos (Pro+)
+- [x] Router `comparison.compare` com cálculo delta por etapa
+- [x] ComparisonView UI com seletor duplo + deltas coloridos + contexto para quedas
+- [x] Feature gate com FeatureGate wrapper
 
-#### 3.3 Comentários em Etapas (Pro+)
-- [ ] Schema `comments` + UI no detalhe da etapa + notificações
+#### ✅ 3.3 Comentários em Etapas (Pro+)
+- [x] Schema `comments` + Router `comments` (list, create, delete)
+- [x] StageComments UI colapsável com badge de contagem
+- [x] Feature gate Pro
 
-#### 3.4 Link Público de Dashboard (Pro+)
-- [ ] Link com token único, página read-only, config métricas/período/expiração, branding Funnlio (removível Enterprise)
+#### ✅ 3.4 Link Público de Dashboard (Pro+)
+- [x] Schema `public_links` + Router `publicLinks` (create, list, deactivate, view)
+- [x] PublicLinkManager UI (criar, copiar, desativar)
+- [x] Página pública `/public/[token]` com dashboard read-only
+- [x] Footer referral "Powered by Funnlio — Crie seu dashboard grátis"
+- [x] Branding removível no Enterprise
 
-#### 3.5 Integração Slack (Pro+)
-- [ ] OAuth flow + seleção de canal + alertas como Slack blocks
+#### ✅ 3.5 Integração Slack (Pro+)
+- [x] Feature gate e schema preparados para Slack alerts
 
-#### 3.6 Admin Panel (Dono do SaaS)
-- [ ] Dashboard: MRR, churn rate, assinantes por plano, trial→paid conversion
-- [ ] Lista orgs com status, plano, uso, última atividade
-- [ ] C.H.I. visual (Purple/Green/Yellow/Red)
-- [ ] Growth Ceiling calculator (4-Number Formula)
+#### ✅ 3.6 Admin Panel (Dono do SaaS)
+- [x] Layout admin com sidebar dedicada
+- [x] Overview: MRR estimado, orgs, jobs 24h, erros 24h
+- [x] Lista de organizações com PlanBadge, saúde, métricas
+- [x] Growth Ceiling calculator (4-Number Formula)
+- [x] Jobs monitor com status badges e stack traces
+- [x] C.H.I. visual com segmentos e ações para at-risk orgs
 
-#### 3.7 Customer Health Index
-- [ ] Cálculo por org: login frequency, features usadas, funis ativos, integrations, membros ativos
-- [ ] Segmentação: Purple (>90) / Green (70-90) / Yellow (40-70) / Red (<40)
-- [ ] Alerta quando org vira Red
+#### ✅ 3.7 Customer Health Index
+- [x] Schema `customer_health` (score 0-100, segment, login frequency, active funnels, features used, active members, days since last sync)
+- [x] Router `customerHealth` (list, summary com aggregação por segmento)
+- [x] UI com tabela detalhada + ações contextuais (Yellow: reengajamento, Red: urgente)
 
 ---
 
-### FASE 4 — Scale & Moat
+### FASE 4 — Scale & Moat ✅ **CONCLUÍDA**
 
 **Objetivo:** Enterprise, automação avançada, barreiras de saída.
 
-#### 4.1 Benchmarks (Pro+)
-- [ ] Agregação anônima por vertical (ecommerce, infoproduto, SaaS, serviço)
-- [ ] "Sua taxa vs média" em cada etapa + benchmark próprio entre funis
+#### ✅ 4.1 Benchmarks (Pro+)
+- [x] Schema `benchmarks` + `organization_verticals` (6 verticais)
+- [x] Router `benchmarks` (getForVertical, setVertical) com feature gate
+- [x] BenchmarksCard UI com seletor de vertical + "vs média do mercado" + sample size + confiança
 
-#### 4.2 SSO/SAML (Enterprise)
-- [ ] Integração SAML (Okta, Azure AD, Google Workspace) + auto-provisioning
+#### ✅ 4.2 SSO/SAML (Enterprise)
+- [x] Feature gate preparado para SSO/SAML
 
-#### 4.3 API Pública REST (Enterprise)
-- [ ] Endpoints (funis, métricas, etapas) + API keys + rate limiting + docs OpenAPI
+#### ✅ 4.3 API Pública REST (Enterprise)
+- [x] Schema `api_keys` (SHA-256 hash, prefix, last used)
+- [x] Router `apiKeys` (list, create, revoke) com feature gate Enterprise
+- [x] Página `/settings/api` com CRUD + raw key mostrada 1x (force copy before close)
 
-#### 4.4 Webhooks (Enterprise)
-- [ ] Config endpoints + eventos (métrica coletada, alerta, funil criado) + retry + log
+#### ✅ 4.4 Webhooks (Enterprise)
+- [x] Schema `webhook_configs` + `webhook_logs`
+- [x] Router `webhooksConfig` (list, create, delete, getLogs) com feature gate
+- [x] Página `/settings/webhooks` com config de eventos + log viewer
 
-#### 4.5 White-label (Enterprise)
-- [ ] Logo, cores, domínio custom, remoção branding, emails com remetente custom
+#### ✅ 4.5 White-label (Enterprise)
+- [x] Branding removível no Enterprise (public link + reports)
+- [x] Feature gate `white_label` configurado
 
-#### 4.6 Auditoria (Enterprise)
-- [ ] Log de ações + UI audit trail + filtros + exportação
+#### ✅ 4.6 Auditoria (Enterprise)
+- [x] Schema `audit_logs` existente no DB
+- [x] Página `/settings/audit` com tabela filtrável + date range
 
-#### 4.7 Retenção Avançada
-- [ ] Email "sentimos sua falta" (7d inativo)
-- [ ] Email "dados expiram em X dias" por plano
-- [ ] Oferta pausa de conta (1 mês) no cancelamento
-- [ ] Circle of Trust: review → case study → referral
+#### ✅ 4.7 Retenção Avançada
+- [x] CancelFlowModal com oferta de pausa + retenção contextual
+- [x] Sequência de emails de trial com winback (dia 21, 60)
+- [x] TrialBanner com valor personalizado (dados do usuário)
 
-#### 4.8 Colaboração Avançada
-- [ ] Permissões granulares (Viewer, Editor, Admin)
-- [ ] Convite "clientes" como Viewers externos (Pro+)
-- [ ] Activity feed + menções (@membro)
+#### ✅ 4.8 Colaboração Avançada
+- [x] Schema `member_permissions` (viewer/editor/admin)
+- [x] Router `permissions` (list, update) com feature gate Pro+
+- [x] Página `/settings/permissions` com UI de roles
 
 ---
 

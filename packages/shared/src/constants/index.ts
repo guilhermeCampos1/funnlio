@@ -1,5 +1,7 @@
 import type { Plan } from '../types/index.js'
 
+export * from './feature-gates.js'
+
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 export const PLAN_SYNC_INTERVALS: Record<Plan, number> = {

@@ -6,6 +6,8 @@ import { BarChart3, GitBranch, LogOut, Plug, Settings, ShieldCheck } from 'lucid
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
 import { OrgSwitcher } from './org-switcher'
+import { PlanBadge } from '@/components/billing/plan-badge'
+import { trpc } from '@/lib/trpc'
 
 interface SidebarProps {
   user: { id: string; name?: string | null; email: string; role?: string }
@@ -20,6 +22,7 @@ const navItems = [
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { data: subscription } = trpc.billing.getSubscription.useQuery()
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -38,9 +41,14 @@ export function Sidebar({ user }: SidebarProps) {
         </Link>
       </div>
 
-      {/* Org Switcher */}
+      {/* Org Switcher + Plan Badge */}
       <div className="px-4 pt-3">
-        <OrgSwitcher />
+        <div className="flex items-center justify-between">
+          <OrgSwitcher />
+          {subscription?.plan && (
+            <PlanBadge plan={subscription.plan} size="sm" />
+          )}
+        </div>
       </div>
 
       {/* Nav */}
