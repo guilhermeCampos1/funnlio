@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, GitBranch, LogOut, Plug, Settings, ShieldCheck } from 'lucide-react'
+import { BarChart3, CreditCard, GitBranch, LogOut, Plug, Settings, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
 import { OrgSwitcher } from './org-switcher'
@@ -16,6 +16,7 @@ interface SidebarProps {
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/integrations', label: 'Integrações', icon: Plug },
+  { href: '/settings/billing', label: 'Plano', icon: CreditCard },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ]
 

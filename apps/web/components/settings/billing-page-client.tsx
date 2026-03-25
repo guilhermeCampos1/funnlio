@@ -275,21 +275,23 @@ function UsageMeter({
 
 function UsageMeters({
   usage,
-  planLimits,
 }: {
-  usage: { funnels: number; integrations: number; members: number }
-  planLimits: { funnels: number | null; integrations: number | null; members: number | null }
+  usage: {
+    funnels: { current: number; limit: number }
+    integrations: { current: number; limit: number }
+    members: { current: number; limit: number }
+  }
 }) {
   return (
     <div className="rounded-lg border bg-card p-5 space-y-4">
       <h2 className="font-medium text-sm">Uso atual</h2>
-      <UsageMeter label="Funis" current={usage.funnels} max={planLimits.funnels} />
+      <UsageMeter label="Funis" current={usage.funnels.current} max={isFinite(usage.funnels.limit) ? usage.funnels.limit : null} />
       <UsageMeter
-        label="Integracoes"
-        current={usage.integrations}
-        max={planLimits.integrations}
+        label="Integrações"
+        current={usage.integrations.current}
+        max={isFinite(usage.integrations.limit) ? usage.integrations.limit : null}
       />
-      <UsageMeter label="Membros" current={usage.members} max={planLimits.members} />
+      <UsageMeter label="Membros" current={usage.members.current} max={isFinite(usage.members.limit) ? usage.members.limit : null} />
     </div>
   )
 }
@@ -751,8 +753,8 @@ export function BillingPageClient() {
       />
 
       {/* Usage meters */}
-      {usage.data && planLimits.data && (
-        <UsageMeters usage={usage.data} planLimits={planLimits.data} />
+      {usage.data && (
+        <UsageMeters usage={usage.data} />
       )}
 
       {/* Plan comparison */}

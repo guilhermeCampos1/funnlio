@@ -1,6 +1,8 @@
 import type { Plan } from '../types/index.js'
 
 export * from './feature-gates.js'
+export * from './plan-limits.js'
+export * from './trial-emails.js'
 
 // ─── Plans ────────────────────────────────────────────────────────────────────
 

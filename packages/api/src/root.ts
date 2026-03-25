@@ -5,6 +5,11 @@ import { integrationsRouter } from './routers/integrations.js'
 import { metricsRouter } from './routers/metrics.js'
 import { adminRouter } from './routers/admin.js'
 import { organizationsRouter } from './routers/organizations.js'
+import { billingRouter } from './routers/billing.js'
+import { insightsRouter } from './routers/insights.js'
+import { valueMetricsRouter } from './routers/value-metrics.js'
+import { alertsRouter } from './routers/alerts.js'
+import { exportsRouter } from './routers/exports.js'
 import { reportsRouter } from './routers/reports.js'
 import { commentsRouter } from './routers/comments.js'
 import { comparisonRouter } from './routers/comparison.js'
@@ -22,6 +27,11 @@ export const appRouter = router({
   metrics: metricsRouter,
   admin: adminRouter,
   organizations: organizationsRouter,
+  billing: billingRouter,
+  insights: insightsRouter,
+  valueMetrics: valueMetricsRouter,
+  alerts: alertsRouter,
+  exports: exportsRouter,
   reports: reportsRouter,
   comments: commentsRouter,
   comparison: comparisonRouter,

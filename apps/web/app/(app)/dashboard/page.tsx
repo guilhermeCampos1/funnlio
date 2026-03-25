@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { api } from '@/lib/trpc-server'
 import { FunnelCard } from '@/components/funnels/funnel-card'
 import { CreateFunnelButton } from '@/components/funnels/create-funnel-button'
+import { DashboardCards } from '@/components/dashboard/dashboard-cards'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
@@ -23,6 +24,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Value Dashboard + Insights + Trial Progress (client components) */}
+      <DashboardCards />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Funis de Marketing</h1>
