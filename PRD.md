@@ -256,6 +256,23 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 - [x] Botão "Testar conexão" funcional
 - [ ] OAuth2 flow para Google Ads e Google Analytics
 
+**UX Guidance e Onboarding**
+- [x] Componente `HelpTooltip` reutilizável (Radix Tooltip com ícone ?)
+- [x] Componente `HelpDrawer` expansível para guias passo-a-passo
+- [x] Guias de credenciais por provider — Meta Ads, Pipedrive, Google Ads, Clarity, GA4 (com links diretos)
+- [x] Guias integrados no formulário de conexão ("Como obter?" por campo)
+- [x] Dicionário de KPIs com tooltips para todas as métricas
+- [x] Tooltips em KPIs no detalhe do funil e na seleção de métricas
+- [x] Tooltip na taxa de conversão entre etapas
+- [x] Inline help text em todos os formulários (etapas, config, membros)
+- [x] Empty state inteligente no dashboard (com/sem integração)
+- [x] Empty state com grid de providers na página de integrações
+- [x] Progress bar de setup animada (4 passos até First Value Moment)
+- [x] Ícones SVG oficiais de todos os providers
+- [x] Seletor de período com calendário customizável (data início/fim)
+- [x] Cards de integração com hover animations e status badges coloridos
+- [x] Nota de segurança AES-256 no formulário de conexão
+
 **Segurança**
 - [x] **Encryption AES-256 das credentials** no banco (AES-256-GCM com iv:authTag:ciphertext)
 - [x] Decrypt ao usar no worker e nos routers de integração
