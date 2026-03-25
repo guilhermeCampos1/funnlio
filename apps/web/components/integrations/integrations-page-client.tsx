@@ -1,15 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Plug, Plus, CheckCircle2, XCircle, AlertCircle, Trash2, RefreshCw } from 'lucide-react'
+import { Plus, CheckCircle2, XCircle, AlertCircle, Trash2, RefreshCw, ExternalLink } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 import { ConnectIntegrationSheet } from './connect-integration-sheet'
+import { ProviderIcon } from '@/components/ui/provider-icons'
 
 const statusConfig = {
-  active: { label: 'Ativa', icon: CheckCircle2, className: 'text-green-600' },
-  error: { label: 'Erro', icon: XCircle, className: 'text-red-600' },
-  revoked: { label: 'Revogada', icon: XCircle, className: 'text-red-600' },
-  pending: { label: 'Pendente', icon: AlertCircle, className: 'text-yellow-600' },
+  active: { label: 'Conectada', icon: CheckCircle2, className: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+  error: { label: 'Erro', icon: XCircle, className: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+  revoked: { label: 'Revogada', icon: XCircle, className: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+  pending: { label: 'Pendente', icon: AlertCircle, className: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' },
 } as const
 
 const categoryLabels: Record<string, string> = {
@@ -19,6 +20,14 @@ const categoryLabels: Record<string, string> = {
   heatmap: 'Heatmap',
   email: 'Email',
   other: 'Outro',
+}
+
+const categoryDescriptions: Record<string, string> = {
+  ads: 'Campanhas pagas',
+  crm: 'Pipeline de vendas',
+  analytics: 'Tráfego e comportamento',
+  heatmap: 'Mapas de calor e UX',
+  email: 'Email marketing',
 }
 
 export function IntegrationsPageClient() {
@@ -35,13 +44,21 @@ export function IntegrationsPageClient() {
     onSuccess: () => utils.integrations.list.invalidate(),
   })
 
+  // Which providers are already connected
+  const connectedSlugs = new Set(
+    integrations.map((i) => {
+      const p = providers.find((p) => p.id === i.providerId)
+      return p?.slug
+    }).filter(Boolean)
+  )
+
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />
           ))}
         </div>
       </div>
@@ -50,122 +67,171 @@ export function IntegrationsPageClient() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Integrações</h1>
-            <p className="text-muted-foreground">
-              {integrations.length} integraç{integrations.length !== 1 ? 'ões' : 'ão'} conectada{integrations.length !== 1 ? 's' : ''}
+            <p className="text-muted-foreground text-sm">
+              Conecte suas ferramentas para coleta automática de métricas
             </p>
           </div>
           <button
             onClick={() => setSheetOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="
+              inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
+              bg-primary text-primary-foreground text-sm font-medium
+              hover:bg-primary/90 transition-all duration-200
+              hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02]
+              active:scale-[0.98]
+            "
           >
             <Plus className="w-4 h-4" />
             Conectar ferramenta
           </button>
         </div>
 
-        {integrations.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 space-y-6">
-            <div className="text-center">
-              <Plug className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-medium">Conecte suas ferramentas de marketing</h3>
-              <p className="text-muted-foreground text-sm mt-1 max-w-md mx-auto">
-                Integrações são a ponte entre suas ferramentas e o Funnlio. Sem exportar planilhas, sem copiar dados — tudo automático.
-              </p>
-            </div>
+        {/* Connected integrations */}
+        {integrations.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Conectadas ({integrations.length})
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {integrations.map((integration) => {
+                const status = statusConfig[integration.status as keyof typeof statusConfig] ?? statusConfig.pending
+                const StatusIcon = status.icon
+                const provider = providers.find((p) => p.id === integration.providerId)
 
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-3">Comece pela ferramenta que você mais usa:</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {providers.map((provider) => (
-                  <button
-                    key={provider.id}
-                    onClick={() => {
-                      setSheetOpen(true)
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border text-sm hover:bg-muted transition-colors"
+                return (
+                  <div
+                    key={integration.id}
+                    className="group rounded-xl border bg-card p-5 space-y-4 transition-all duration-200 hover:shadow-md hover:border-primary/20"
                   >
-                    {provider.name}
-                  </button>
-                ))}
-              </div>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+                          <ProviderIcon slug={provider?.slug ?? ''} className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm">{integration.name}</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {provider?.name ?? integration.provider.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${status.bg} ${status.className}`}>
+                        <StatusIcon className="w-3 h-3" />
+                        {status.label}
+                      </div>
+                    </div>
+
+                    {integration.errorMessage && (
+                      <p className="text-xs text-red-600 bg-red-50 rounded-lg p-2.5 border border-red-100">
+                        {integration.errorMessage}
+                      </p>
+                    )}
+
+                    {integration.lastSyncedAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Último sync:{' '}
+                        {new Intl.DateTimeFormat('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }).format(new Date(integration.lastSyncedAt))}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => testConnection.mutate({ id: integration.id })}
+                        disabled={testConnection.isPending}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium hover:bg-muted transition-all disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${testConnection.isPending ? 'animate-spin' : ''}`} />
+                        Testar
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Tem certeza que deseja desconectar esta integração?')) {
+                            disconnect.mutate({ id: integration.id })
+                          }
+                        }}
+                        disabled={disconnect.isPending}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium text-red-600 hover:bg-red-50 transition-all disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {integrations.map((integration) => {
-              const status = statusConfig[integration.status as keyof typeof statusConfig] ?? statusConfig.pending
-              const StatusIcon = status.icon
-              const provider = providers.find((p) => p.id === integration.providerId)
+        )}
+
+        {/* Available providers */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            {integrations.length > 0 ? 'Ferramentas disponíveis' : 'Conecte suas ferramentas de marketing'}
+          </h2>
+          {integrations.length === 0 && (
+            <p className="text-sm text-muted-foreground max-w-lg">
+              Integrações conectam o Funnlio às suas ferramentas. Sem exportar planilhas — as métricas são coletadas automaticamente.
+            </p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {providers.map((provider) => {
+              const isConnected = connectedSlugs.has(provider.slug)
 
               return (
-                <div key={integration.id} className="rounded-lg border bg-card p-5 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">{integration.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {provider?.name ?? integration.provider.name}
-                        {provider && (
-                          <span className="ml-2 text-xs bg-muted px-1.5 py-0.5 rounded">
-                            {categoryLabels[provider.category] ?? provider.category}
+                <button
+                  key={provider.id}
+                  onClick={() => setSheetOpen(true)}
+                  disabled={isConnected}
+                  className={`
+                    group relative rounded-xl border p-5 text-left transition-all duration-200
+                    ${isConnected
+                      ? 'opacity-50 cursor-default bg-muted/30'
+                      : 'hover:shadow-lg hover:border-primary/30 hover:scale-[1.01] active:scale-[0.99] cursor-pointer bg-card'
+                    }
+                  `}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`
+                      w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200
+                      ${isConnected ? 'bg-muted' : 'bg-muted/50 group-hover:bg-primary/5 group-hover:shadow-sm'}
+                    `}>
+                      <ProviderIcon slug={provider.slug} className="w-7 h-7" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-sm">{provider.name}</h3>
+                        {isConnected && (
+                          <span className="text-[10px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full border border-green-200">
+                            Conectada
                           </span>
                         )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {categoryDescriptions[provider.category] ?? categoryLabels[provider.category]}
                       </p>
                     </div>
-                    <div className={`flex items-center gap-1 text-xs font-medium ${status.className}`}>
-                      <StatusIcon className="w-3.5 h-3.5" />
-                      {status.label}
+                  </div>
+
+                  {!isConnected && (
+                    <div className="mt-3 flex items-center gap-1 text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <ExternalLink className="w-3 h-3" />
+                      Conectar
                     </div>
-                  </div>
-
-                  {integration.errorMessage && (
-                    <p className="text-xs text-red-600 bg-red-50 rounded p-2">
-                      {integration.errorMessage}
-                    </p>
                   )}
-
-                  {integration.lastSyncedAt && (
-                    <p className="text-xs text-muted-foreground">
-                      Último sync:{' '}
-                      {new Intl.DateTimeFormat('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      }).format(new Date(integration.lastSyncedAt))}
-                    </p>
-                  )}
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      onClick={() => testConnection.mutate({ id: integration.id })}
-                      disabled={testConnection.isPending}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium hover:bg-muted transition-colors disabled:opacity-50"
-                    >
-                      <RefreshCw className={`w-3 h-3 ${testConnection.isPending ? 'animate-spin' : ''}`} />
-                      Testar conexão
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Tem certeza que deseja desconectar esta integração?')) {
-                          disconnect.mutate({ id: integration.id })
-                        }
-                      }}
-                      disabled={disconnect.isPending}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      Desconectar
-                    </button>
-                  </div>
-                </div>
+                </button>
               )
             })}
           </div>
-        )}
+        </div>
       </div>
 
       {sheetOpen && (
