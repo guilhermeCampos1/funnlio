@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, CheckCircle2, XCircle, AlertCircle, Trash2, RefreshCw, ExternalLink } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { ConnectIntegrationSheet } from './connect-integration-sheet'
 import { ProviderIcon } from '@/components/ui/provider-icons'
@@ -33,10 +34,45 @@ const categoryDescriptions: Record<string, string> = {
 export function IntegrationsPageClient() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [preselectedProviderId, setPreselectedProviderId] = useState<string | null>(null)
+  const [oauthTokens, setOauthTokens] = useState<{ access_token: string; refresh_token: string; token_expires_at: string } | null>(null)
+  const searchParams = useSearchParams()
   const utils = trpc.useUtils()
+
+  // Detect OAuth return from Google
+  useEffect(() => {
+    const oauthProvider = searchParams.get('oauth')
+    const success = searchParams.get('success')
+    if (oauthProvider && success === 'true') {
+      // Fetch tokens from cookie via API
+      fetch('/api/auth/google/tokens')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.tokens) {
+            setOauthTokens(data.tokens)
+            // Find provider by slug and open sheet
+            // Will be handled after providers load
+          }
+        })
+        .catch(() => {})
+      // Clean URL
+      window.history.replaceState({}, '', '/integrations')
+    }
+  }, [searchParams])
 
   const { data: integrations = [], isLoading } = trpc.integrations.list.useQuery()
   const { data: providers = [] } = trpc.integrations.listProviders.useQuery()
+
+  // Auto-open sheet when returning from OAuth with tokens
+  useEffect(() => {
+    if (oauthTokens && providers.length > 0 && !sheetOpen) {
+      const provider = providers.find((p) => p.slug === oauthTokens.provider)
+      if (provider) {
+        setPreselectedProviderId(provider.id)
+        setSheetOpen(true)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oauthTokens, providers.length])
 
   const testConnection = trpc.integrations.testConnection.useMutation({
     onSuccess: () => utils.integrations.list.invalidate(),
@@ -246,8 +282,9 @@ export function IntegrationsPageClient() {
 
       {sheetOpen && (
         <ConnectIntegrationSheet
-          onClose={() => { setSheetOpen(false); setPreselectedProviderId(null) }}
+          onClose={() => { setSheetOpen(false); setPreselectedProviderId(null); setOauthTokens(null) }}
           initialProviderId={preselectedProviderId}
+          oauthTokens={oauthTokens}
         />
       )}
     </>
