@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
-import { Mail, Clock, Plus, X, FileText, BarChart3, Lightbulb } from 'lucide-react'
+import { Mail, Clock, Plus, X, FileText, BarChart3, Lightbulb, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { FeatureGate } from '@/components/billing/feature-gate'
 
@@ -13,10 +13,12 @@ interface ReportSectionProps {
   title: string
   description: string
   featureGate?: string
+  defaultOpen?: boolean
 }
 
-function ReportSection({ frequency, title, description, featureGate }: ReportSectionProps) {
+function ReportSection({ frequency, title, description, featureGate, defaultOpen }: ReportSectionProps) {
   const { data: allSettings, isLoading } = trpc.reports.getSettings.useQuery()
+  const { data: funnels = [] } = trpc.funnels.list.useQuery()
   const upsertSetting = trpc.reports.upsertSetting.useMutation()
   const utils = trpc.useUtils()
 
@@ -54,124 +56,161 @@ function ReportSection({ frequency, title, description, featureGate }: ReportSec
   }
 
   const content = (
-    <div className={cn('rounded-lg border bg-card p-5', !enabled && 'opacity-60')}>
-      <div className="flex items-center justify-between mb-4">
+    <details open={defaultOpen || enabled} className="group rounded-lg border bg-card">
+      <summary className="flex items-center justify-between p-5 cursor-pointer list-none select-none">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
             <Mail className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="font-medium text-sm">{title}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-sm">{title}</h3>
+              {enabled && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Ativo
+                </span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">{description}</p>
           </div>
         </div>
-        <button
-          onClick={() => handleUpdate({ enabled: !enabled })}
-          disabled={upsertSetting.isPending}
-          className={cn(
-            'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-            enabled ? 'bg-primary' : 'bg-zinc-300 dark:bg-zinc-600'
-          )}
-        >
-          <span
+        <div className="flex items-center gap-3">
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              handleUpdate({ enabled: !enabled })
+            }}
+            disabled={upsertSetting.isPending}
             className={cn(
-              'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-              enabled ? 'translate-x-6' : 'translate-x-1'
+              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+              enabled ? 'bg-primary' : 'bg-zinc-300 dark:bg-zinc-600'
             )}
-          />
-        </button>
-      </div>
+          >
+            <span
+              className={cn(
+                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                enabled ? 'translate-x-6' : 'translate-x-1'
+              )}
+            />
+          </button>
+          <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180" />
+        </div>
+      </summary>
 
-      {isLoading ? (
-        <div className="h-32 bg-muted rounded animate-pulse" />
-      ) : (
-        <div className="space-y-4">
-          {/* Recipients */}
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-2 block">
-              Destinatários
-            </label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {recipients.map((email) => (
-                <span
-                  key={email}
-                  className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+      <div className={cn('px-5 pb-5 space-y-4', !enabled && 'opacity-60 pointer-events-none')}>
+        {isLoading ? (
+          <div className="h-32 bg-muted rounded animate-pulse" />
+        ) : (
+          <>
+            {/* Funnel scope */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                Quais funis incluir?
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  className="rounded-md border border-primary bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary"
                 >
-                  {email}
-                  <button
-                    onClick={() => handleRemoveEmail(email)}
-                    className="text-muted-foreground hover:text-red-500"
+                  Todos os funis
+                </button>
+                {funnels.map((funnel) => (
+                  <span
+                    key={funnel.id}
+                    className="rounded-md border px-3 py-1.5 text-xs text-muted-foreground"
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
+                    {funnel.name}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Por enquanto todos os funis sao incluidos. Filtragem por funil em breve.
+              </p>
             </div>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
-                placeholder="email@exemplo.com"
-                className="flex-1 rounded-md border bg-background px-3 py-1.5 text-sm"
-                disabled={!enabled}
-              />
+
+            {/* Recipients */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                Destinatarios (email)
+              </label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {recipients.map((email) => (
+                  <span
+                    key={email}
+                    className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+                  >
+                    {email}
+                    <button
+                      onClick={() => handleRemoveEmail(email)}
+                      className="text-muted-foreground hover:text-red-500"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
+                  placeholder="email@exemplo.com"
+                  className="flex-1 rounded-md border bg-background px-3 py-1.5 text-sm"
+                />
+                <button
+                  onClick={handleAddEmail}
+                  disabled={!newEmail.trim()}
+                  className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-sm hover:bg-primary/90 disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content toggles */}
+            <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={handleAddEmail}
-                disabled={!enabled || !newEmail.trim()}
-                className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-sm hover:bg-primary/90 disabled:opacity-50"
+                onClick={() => handleUpdate({ includeMetrics: !includeMetrics })}
+                className={cn(
+                  'flex items-center gap-2 rounded-md border p-3 text-left transition-colors',
+                  includeMetrics ? 'border-primary bg-primary/5' : 'border-muted'
+                )}
               >
-                <Plus className="w-4 h-4" />
+                <BarChart3 className={cn('w-4 h-4', includeMetrics ? 'text-primary' : 'text-muted-foreground')} />
+                <span className="text-xs font-medium">Incluir metricas</span>
+              </button>
+              <button
+                onClick={() => handleUpdate({ includeInsights: !includeInsights })}
+                className={cn(
+                  'flex items-center gap-2 rounded-md border p-3 text-left transition-colors',
+                  includeInsights ? 'border-primary bg-primary/5' : 'border-muted'
+                )}
+              >
+                <Lightbulb className={cn('w-4 h-4', includeInsights ? 'text-primary' : 'text-muted-foreground')} />
+                <span className="text-xs font-medium">Incluir insights</span>
               </button>
             </div>
-          </div>
 
-          {/* Toggles */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => handleUpdate({ includeMetrics: !includeMetrics })}
-              disabled={!enabled}
-              className={cn(
-                'flex items-center gap-2 rounded-md border p-3 text-left transition-colors',
-                includeMetrics ? 'border-primary bg-primary/5' : 'border-muted'
-              )}
-            >
-              <BarChart3 className={cn('w-4 h-4', includeMetrics ? 'text-primary' : 'text-muted-foreground')} />
-              <span className="text-xs font-medium">Incluir métricas</span>
-            </button>
-            <button
-              onClick={() => handleUpdate({ includeInsights: !includeInsights })}
-              disabled={!enabled}
-              className={cn(
-                'flex items-center gap-2 rounded-md border p-3 text-left transition-colors',
-                includeInsights ? 'border-primary bg-primary/5' : 'border-muted'
-              )}
-            >
-              <Lightbulb className={cn('w-4 h-4', includeInsights ? 'text-primary' : 'text-muted-foreground')} />
-              <span className="text-xs font-medium">Incluir insights</span>
-            </button>
-          </div>
-
-          {/* Send time */}
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
-              Horário de envio
-            </label>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <input
-                type="time"
-                value={sendTime}
-                onChange={(e) => handleUpdate({ sendTime: e.target.value })}
-                disabled={!enabled}
-                className="rounded-md border bg-background px-3 py-1.5 text-sm"
-              />
+            {/* Send time */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Horario de envio
+              </label>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <input
+                  type="time"
+                  value={sendTime}
+                  onChange={(e) => handleUpdate({ sendTime: e.target.value })}
+                  className="rounded-md border bg-background px-3 py-1.5 text-sm"
+                />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </details>
   )
 
   if (featureGate) {
@@ -187,29 +226,31 @@ export function ReportsPageClient() {
       <div className="flex items-center gap-3 mb-6">
         <FileText className="w-5 h-5 text-primary" />
         <div>
-          <h1 className="text-xl font-bold">Relatórios por Email</h1>
+          <h1 className="text-xl font-bold">Relatorios Automaticos</h1>
           <p className="text-sm text-muted-foreground">
-            Configure relatórios automáticos para acompanhar seus funis.
+            Configure relatorios para acompanhar seus funis por email.
+            Voce tambem pode visualizar relatorios diretamente em <a href="/reports" className="text-primary hover:underline">/relatorios</a>.
           </p>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <ReportSection
           frequency="daily"
-          title="Relatório Diário"
-          description="Resumo das métricas do dia anterior"
+          title="Relatorio Diario"
+          description="Resumo das metricas do dia anterior"
+          defaultOpen
         />
         <ReportSection
           frequency="weekly"
-          title="Relatório Semanal"
-          description="Comparação semanal com tendências"
+          title="Relatorio Semanal"
+          description="Comparacao semanal com tendencias"
           featureGate="weekly_report"
         />
         <ReportSection
           frequency="monthly"
-          title="Relatório Mensal"
-          description="Visão geral mensal com insights detalhados"
+          title="Relatorio Mensal"
+          description="Visao geral mensal com insights detalhados"
           featureGate="monthly_report"
         />
       </div>

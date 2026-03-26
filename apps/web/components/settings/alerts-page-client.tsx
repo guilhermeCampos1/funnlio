@@ -294,7 +294,10 @@ function AlertsPageContent() {
             A frequencia depende do intervalo de sincronizacao do seu plano.
           </p>
           <p className="mt-1">
-            Alertas via Slack estao disponiveis no plano <span className="font-medium text-foreground">Pro</span> ou superior.
+            Alertas ativos sem canal configurado (email/Slack) aparecem apenas no <span className="font-medium text-foreground">sino de notificacoes</span> no topo da sidebar.
+          </p>
+          <p className="mt-1">
+            Alertas via Slack exigem plano <span className="font-medium text-foreground">Pro</span> e uma <a href="/integrations" className="text-primary hover:underline">integracao Slack conectada</a>.
           </p>
         </div>
       </div>
