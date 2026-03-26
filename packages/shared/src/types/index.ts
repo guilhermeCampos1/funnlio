@@ -1,6 +1,6 @@
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
-export type Plan = 'trial' | 'starter' | 'pro' | 'enterprise'
+export type Plan = 'free' | 'trial' | 'starter' | 'pro' | 'enterprise'
 
 export type OrgRole = 'owner' | 'admin' | 'viewer'
 

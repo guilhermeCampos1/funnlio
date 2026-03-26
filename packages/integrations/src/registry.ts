@@ -4,6 +4,7 @@ import { GoogleAdsProvider } from './providers/google-ads/index.js'
 import { PipedriveProvider } from './providers/pipedrive/index.js'
 import { ClarityProvider } from './providers/clarity/index.js'
 import { GoogleAnalyticsProvider } from './providers/google-analytics/index.js'
+import { SlackProvider } from './providers/slack/index.js'
 
 /**
  * Registry central de todos os providers de integração disponíveis.
@@ -15,6 +16,7 @@ export const providerRegistry = new Map<string, IntegrationProvider>([
   ['pipedrive', new PipedriveProvider()],
   ['microsoft_clarity', new ClarityProvider()],
   ['google_analytics', new GoogleAnalyticsProvider()],
+  ['slack', new SlackProvider()],
 ])
 
 export function getProvider(slug: string): IntegrationProvider {

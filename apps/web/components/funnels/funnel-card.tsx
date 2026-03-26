@@ -2,6 +2,21 @@ import Link from 'next/link'
 import { ArrowRight, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+function getSyncHealth(lastSyncedAt: Date | string | null, status: string) {
+  if (status === 'paused' || status === 'archived') return null
+  if (!lastSyncedAt) return 'red'
+  const diffHours = (Date.now() - new Date(lastSyncedAt).getTime()) / (1000 * 60 * 60)
+  if (diffHours < 4) return 'green'
+  if (diffHours < 48) return 'yellow'
+  return 'red'
+}
+
+const healthConfig = {
+  green: { label: 'Dados frescos', dot: 'bg-green-500', text: 'text-green-600' },
+  yellow: { label: 'Sync pendente', dot: 'bg-yellow-400', text: 'text-yellow-600' },
+  red: { label: 'Atenção', dot: 'bg-red-500', text: 'text-red-600' },
+}
+
 interface FunnelCardProps {
   funnel: {
     id: string
@@ -23,6 +38,8 @@ const statusConfig = {
 
 export function FunnelCard({ funnel }: FunnelCardProps) {
   const status = statusConfig[funnel.status]
+  const health = getSyncHealth(funnel.lastSyncedAt, funnel.status)
+  const healthStyle = health ? healthConfig[health] : null
 
   return (
     <Link href={`/funnels/${funnel.id}`} className="block group">
@@ -47,7 +64,15 @@ export function FunnelCard({ funnel }: FunnelCardProps) {
               )}
             </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+          <div className="flex items-center gap-2">
+            {healthStyle && (
+              <span className={cn('flex items-center gap-1 text-xs font-medium', healthStyle.text)}>
+                <span className={cn('w-2 h-2 rounded-full', healthStyle.dot)} />
+                {healthStyle.label}
+              </span>
+            )}
+            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+          </div>
         </div>
 
         {/* Stats */}

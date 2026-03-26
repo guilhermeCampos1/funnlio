@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { X, Plug, Check } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
+import { getMetricTooltip } from '@/lib/metric-definitions'
 
 // KPIs pré-selecionados por provider slug
 const DEFAULT_SELECTED: Record<string, string[]> = {
@@ -110,6 +112,11 @@ export function AddStageSheet({ funnelId, onClose }: Props) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          {/* Microcopy */}
+          <p className="text-xs text-muted-foreground">
+            Uma etapa puxa métricas automaticamente da ferramenta que você selecionar. Você pode alterar tudo depois.
+          </p>
+
           {/* Nome */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Nome da etapa *</label>
@@ -118,7 +125,7 @@ export function AddStageSheet({ funnelId, onClose }: Props) {
               autoFocus
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Ex: Captação, Landing Page, Vendas..."
+              placeholder="Ex: Tráfego Pago, Leads Qualificados, Vendas Fechadas"
               className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -127,7 +134,7 @@ export function AddStageSheet({ funnelId, onClose }: Props) {
           <div className="space-y-2">
             <label className="text-sm font-medium">Ferramenta</label>
             <p className="text-xs text-muted-foreground">
-              Qual ferramenta monitora essa etapa do funil?
+              Qual ferramenta fornece os dados desta etapa? Precisa estar conectada em Integrações.
             </p>
 
             {integrations.length === 0 ? (
@@ -193,8 +200,13 @@ export function AddStageSheet({ funnelId, onClose }: Props) {
                       >
                         {checked && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
                       </div>
-                      <div>
-                        <p className="text-sm font-medium leading-tight">{metric.label}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1">
+                          <p className="text-sm font-medium leading-tight">{metric.label}</p>
+                          {getMetricTooltip(metric.key) && (
+                            <HelpTooltip text={getMetricTooltip(metric.key)!} side="right" />
+                          )}
+                        </div>
                         {metric.description && (
                           <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
                             {metric.description}

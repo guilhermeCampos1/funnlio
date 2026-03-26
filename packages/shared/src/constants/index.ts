@@ -1,24 +1,31 @@
 import type { Plan } from '../types/index.js'
 
+export * from './feature-gates.js'
+export * from './plan-limits.js'
+export * from './trial-emails.js'
+
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 export const PLAN_SYNC_INTERVALS: Record<Plan, number> = {
-  trial: 24 * 60 * 60 * 1000,   // 24h
-  starter: 4 * 60 * 60 * 1000,  // 4h
-  pro: 60 * 60 * 1000,           // 1h
-  enterprise: 15 * 60 * 1000,   // 15min
+  free: 0,                         // manual only
+  trial: 0,                        // legacy — same as free
+  starter: 4 * 60 * 60 * 1000,    // 4h
+  pro: 60 * 60 * 1000,             // 1h
+  enterprise: 15 * 60 * 1000,     // 15min
 }
 
 export const PLAN_FUNNEL_LIMITS: Record<Plan, number> = {
+  free: 2,
   trial: 2,
-  starter: 10,
+  starter: 5,
   pro: 50,
   enterprise: Infinity,
 }
 
 export const PLAN_INTEGRATION_LIMITS: Record<Plan, number> = {
+  free: 2,
   trial: 2,
-  starter: 5,
+  starter: 3,
   pro: 20,
   enterprise: Infinity,
 }

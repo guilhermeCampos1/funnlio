@@ -6,6 +6,7 @@ import {
   and,
 } from '@funnlio/db'
 import { getProvider, getAllProviders } from '@funnlio/integrations'
+import { encryptCredentials, decryptCredentials } from '@funnlio/shared/crypto'
 
 export const integrationsRouter = router({
   // ─── Listar providers disponíveis (catálogo global) ───────────────────────
@@ -76,8 +77,7 @@ export const integrationsRouter = router({
         })
       }
 
-      // TODO: Criptografar credentials com AES-256 antes de salvar
-      // Por enquanto salva direto — implementar encryption no próximo passo
+      const encryptedCredentials = encryptCredentials(input.credentials)
       const [integration] = await ctx.db
         .insert(integrations)
         .values({
@@ -85,7 +85,7 @@ export const integrationsRouter = router({
           providerId: input.providerId,
           name: input.name,
           status: 'active',
-          credentials: input.credentials,
+          credentials: { encrypted: encryptedCredentials },
           config: input.config ?? {},
         })
         .returning()
@@ -110,9 +110,11 @@ export const integrationsRouter = router({
       }
 
       const registryProvider = getProvider(integration.provider.slug)
-      const credentials = integration.credentials as Record<string, string>
+      const raw = integration.credentials as Record<string, string>
+      const credentials = raw.encrypted
+        ? decryptCredentials(raw.encrypted)
+        : raw
 
-      // TODO: Descriptografar credentials
       const result = await registryProvider.validateCredentials(credentials)
 
       // Atualizar status baseado no resultado
@@ -152,9 +154,11 @@ export const integrationsRouter = router({
       }
 
       const registryProvider = getProvider(integration.provider.slug)
-      const credentials = integration.credentials as Record<string, string>
+      const raw = integration.credentials as Record<string, string>
+      const credentials = raw.encrypted
+        ? decryptCredentials(raw.encrypted)
+        : raw
 
-      // TODO: Descriptografar credentials
       const resources = await registryProvider.listResources?.(credentials, input.resourceType) ?? []
       return resources
     }),

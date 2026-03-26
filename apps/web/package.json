@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.21",
+    "@boxyhq/saml-jackson": "^26.2.0",
     "@funnlio/api": "workspace:*",
     "@funnlio/db": "workspace:*",
     "@funnlio/shared": "workspace:*",
@@ -36,6 +37,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.14.1",
+    "stripe": "^20.4.1",
     "superjson": "^2.2.2",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.24.1"

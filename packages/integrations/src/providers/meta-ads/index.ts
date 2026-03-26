@@ -42,7 +42,7 @@ export class MetaAdsProvider extends BaseProvider {
         label: 'Access Token',
         type: 'password',
         required: true,
-        helpText: 'Token de acesso da sua conta Meta Business. Precisa da permissão ads_read.',
+        helpText: 'User Access Token do Graph API Explorer (developers.facebook.com/tools/explorer). Selecione seu app, adicione permissao ads_read e clique "Gerar Token". Tokens de App ou Page nao funcionam.',
         placeholder: 'EAAxxxxxxx...',
       },
       {
@@ -150,7 +150,16 @@ export class MetaAdsProvider extends BaseProvider {
       const data = await response.json() as { id?: string; error?: { message: string } }
 
       if (data.error) {
-        return { valid: false, errorMessage: data.error.message }
+        let msg = data.error.message
+        // Map common Meta API errors to helpful Portuguese messages
+        if (msg.toLowerCase().includes('hex') || msg.toLowerCase().includes('64 ')) {
+          msg = 'Token invalido. Use um User Access Token gerado no Graph API Explorer (developers.facebook.com/tools/explorer) com permissao ads_read. Tokens de App ou Page nao funcionam aqui.'
+        } else if (msg.toLowerCase().includes('expired')) {
+          msg = 'Token expirado. Gere um novo no Graph API Explorer.'
+        } else if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('permiss')) {
+          msg = 'Token sem permissao ads_read. Regenere o token incluindo essa permissao no Graph API Explorer.'
+        }
+        return { valid: false, errorMessage: msg }
       }
       return { valid: true }
     } catch (error) {

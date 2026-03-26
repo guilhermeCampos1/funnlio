@@ -2,10 +2,12 @@ import 'dotenv/config'
 import { Queue, Worker } from 'bullmq'
 import IORedis from 'ioredis'
 import { collectMetrics, type CollectMetricsPayload } from './jobs/collect-metrics.js'
+import { detectInsights, type DetectInsightsPayload } from './jobs/detect-insights.js'
 import { initScheduler } from './scheduler.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 const QUEUE_NAME = 'collect-metrics'
+const INSIGHTS_QUEUE_NAME = 'detect-insights'
 
 // ─── Redis Connection ──────────────────────────────────────────────────────────
 
@@ -27,6 +29,27 @@ const metricsQueue = new Queue<CollectMetricsPayload>(QUEUE_NAME, {
     removeOnFail: { count: 500 },
   },
 })
+
+// ─── Insights Queue ────────────────────────────────────────────────────────────
+
+const insightsQueue = new Queue<DetectInsightsPayload>(INSIGHTS_QUEUE_NAME, {
+  connection,
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: 'exponential', delay: 5000 },
+    removeOnComplete: { count: 50 },
+    removeOnFail: { count: 100 },
+  },
+})
+
+const insightsWorker = new Worker<DetectInsightsPayload>(
+  INSIGHTS_QUEUE_NAME,
+  async (job) => { await detectInsights(job) },
+  { connection, concurrency: 2 },
+)
+
+insightsWorker.on('completed', (job) => console.log(`[insights] Job ${job.id} concluído`))
+insightsWorker.on('failed', (job, err) => console.error(`[insights] Job ${job?.id} falhou:`, err.message))
 
 // ─── Worker ────────────────────────────────────────────────────────────────────
 
@@ -55,14 +78,16 @@ worker.on('failed', (job, err) => {
 
 // ─── Scheduler ─────────────────────────────────────────────────────────────────
 
-initScheduler(metricsQueue)
+initScheduler(metricsQueue, insightsQueue)
 
 // ─── Graceful shutdown ──────────────────────────────────────────────────────────
 
 process.on('SIGTERM', async () => {
   console.log('[worker] Encerrando...')
   await worker.close()
+  await insightsWorker.close()
   await metricsQueue.close()
+  await insightsQueue.close()
   await connection.quit()
   process.exit(0)
 })
