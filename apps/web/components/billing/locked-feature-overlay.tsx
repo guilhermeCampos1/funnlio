@@ -5,14 +5,16 @@ import type { Plan } from '@funnlio/shared'
 import { cn } from '@/lib/utils'
 
 const planLabels: Record<Plan, string> = {
-  trial: 'Trial',
+  free: 'Free',
+  trial: 'Free',
   starter: 'Starter',
   pro: 'Pro',
   enterprise: 'Enterprise',
 }
 
 const planColors: Record<Plan, string> = {
-  trial: 'bg-blue-100 text-blue-700',
+  free: 'bg-zinc-100 text-zinc-700',
+  trial: 'bg-zinc-100 text-zinc-700',
   starter: 'bg-green-100 text-green-700',
   pro: 'bg-purple-100 text-purple-700',
   enterprise: 'bg-amber-100 text-amber-700',

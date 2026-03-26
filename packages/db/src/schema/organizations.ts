@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, pgEnum } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
-export const planEnum = pgEnum('plan', ['trial', 'starter', 'pro', 'enterprise'])
+export const planEnum = pgEnum('plan', ['free', 'trial', 'starter', 'pro', 'enterprise'])
 export const orgRoleEnum = pgEnum('org_role', ['owner', 'admin', 'viewer'])
 export const userRoleEnum = pgEnum('user_role', ['saas_admin', 'member'])
 
@@ -11,7 +11,7 @@ export const organizations = pgTable('organizations', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   slug: text('slug').unique().notNull(),
-  plan: planEnum('plan').notNull().default('trial'),
+  plan: planEnum('plan').notNull().default('free'),
   planExpiresAt: timestamp('plan_expires_at', { withTimezone: true }),
   settings: jsonb('settings').notNull().default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

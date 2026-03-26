@@ -15,10 +15,11 @@ interface LimitReachedModalProps {
 }
 
 const planPrices: Record<Plan, string> = {
+  free: 'Grátis',
   trial: 'Grátis',
   starter: 'R$97/mês',
   pro: 'R$247/mês',
-  enterprise: 'R$697/mês',
+  enterprise: 'Sob consulta',
 }
 
 export function LimitReachedModal({

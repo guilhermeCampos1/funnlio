@@ -32,6 +32,7 @@ const categoryDescriptions: Record<string, string> = {
 
 export function IntegrationsPageClient() {
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [preselectedProviderId, setPreselectedProviderId] = useState<string | null>(null)
   const utils = trpc.useUtils()
 
   const { data: integrations = [], isLoading } = trpc.integrations.list.useQuery()
@@ -76,7 +77,10 @@ export function IntegrationsPageClient() {
             </p>
           </div>
           <button
-            onClick={() => setSheetOpen(true)}
+            onClick={() => {
+              setPreselectedProviderId(null)
+              setSheetOpen(true)
+            }}
             className="
               inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
               bg-primary text-primary-foreground text-sm font-medium
@@ -189,7 +193,10 @@ export function IntegrationsPageClient() {
               return (
                 <button
                   key={provider.id}
-                  onClick={() => setSheetOpen(true)}
+                  onClick={() => {
+                    setPreselectedProviderId(provider.id)
+                    setSheetOpen(true)
+                  }}
                   disabled={isConnected}
                   className={`
                     group relative rounded-xl border p-5 text-left transition-all duration-200
@@ -235,7 +242,10 @@ export function IntegrationsPageClient() {
       </div>
 
       {sheetOpen && (
-        <ConnectIntegrationSheet onClose={() => setSheetOpen(false)} />
+        <ConnectIntegrationSheet
+          onClose={() => { setSheetOpen(false); setPreselectedProviderId(null) }}
+          initialProviderId={preselectedProviderId}
+        />
       )}
     </>
   )

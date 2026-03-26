@@ -83,7 +83,7 @@ export const FEATURE_GATES: Record<string, FeatureGateConfig> = {
     value: 'Personalize com sua marca, cores e domínio',
   },
   webhooks: {
-    requiredPlan: 'enterprise',
+    requiredPlan: 'starter',
     label: 'Webhooks',
     value: 'Receba eventos em tempo real no seu sistema',
   },
@@ -96,7 +96,8 @@ export const FEATURE_GATES: Record<string, FeatureGateConfig> = {
 
 // Plan hierarchy for comparison
 const PLAN_HIERARCHY: Record<Plan, number> = {
-  trial: 0,
+  free: 0,
+  trial: 0, // legacy — treated same as free
   starter: 1,
   pro: 2,
   enterprise: 3,
@@ -105,17 +106,16 @@ const PLAN_HIERARCHY: Record<Plan, number> = {
 export function hasFeatureAccess(
   currentPlan: Plan,
   featureKey: string,
-  trialExpired: boolean
+  trialExpired?: boolean
 ): boolean {
   const gate = FEATURE_GATES[featureKey]
   if (!gate) return true // unknown feature = allow
+  // Free and legacy trial (expired) = no paid features
+  if (currentPlan === 'free') return false
+  if (currentPlan === 'trial' && trialExpired) return false
+  // Legacy active trial = treat as pro (backwards compat)
   if (currentPlan === 'trial' && !trialExpired) {
-    // During active trial, user has Pro access
     return PLAN_HIERARCHY.pro >= PLAN_HIERARCHY[gate.requiredPlan]
-  }
-  if (currentPlan === 'trial' && trialExpired) {
-    // Expired trial = free, no features
-    return false
   }
   return PLAN_HIERARCHY[currentPlan] >= PLAN_HIERARCHY[gate.requiredPlan]
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
-import { Mail, Clock, Plus, X, Bell, BarChart3, Lightbulb } from 'lucide-react'
+import { Mail, Clock, Plus, X, FileText, BarChart3, Lightbulb } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { FeatureGate } from '@/components/billing/feature-gate'
 
@@ -70,7 +70,7 @@ function ReportSection({ frequency, title, description, featureGate }: ReportSec
           disabled={upsertSetting.isPending}
           className={cn(
             'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-            enabled ? 'bg-primary' : 'bg-muted'
+            enabled ? 'bg-primary' : 'bg-zinc-300 dark:bg-zinc-600'
           )}
         >
           <span
@@ -185,7 +185,7 @@ export function ReportsPageClient() {
   return (
     <div className="container mx-auto max-w-3xl py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
-        <Bell className="w-5 h-5 text-primary" />
+        <FileText className="w-5 h-5 text-primary" />
         <div>
           <h1 className="text-xl font-bold">Relatórios por Email</h1>
           <p className="text-sm text-muted-foreground">

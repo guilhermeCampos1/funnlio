@@ -33,7 +33,7 @@ export const subscriptions = pgTable('subscriptions', {
   stripeCustomerId: text('stripe_customer_id').notNull(),
   stripeSubscriptionId: text('stripe_subscription_id').unique(),
   stripePriceId: text('stripe_price_id'),
-  plan: planEnum('plan').notNull().default('trial'),
+  plan: planEnum('plan').notNull().default('free'),
   status: subscriptionStatusEnum('status').notNull().default('active'),
   billingCycle: billingCycleEnum('billing_cycle').notNull().default('monthly'),
   currentPeriodStart: timestamp('current_period_start', { withTimezone: true }),

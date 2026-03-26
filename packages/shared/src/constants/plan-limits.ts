@@ -4,6 +4,7 @@ export interface PlanLimitConfig {
   maxFunnels: number
   maxIntegrations: number
   maxMembers: number
+  maxWebhooks: number
   syncIntervalMinutes: number
   historyRetentionDays: number
   hasExport: boolean
@@ -18,13 +19,15 @@ export interface PlanLimitConfig {
   price: { monthly: number; yearly: number } // in BRL cents
 }
 
-// Free = post-trial state, not a separate plan enum but uses 'trial' plan with expired trial
+// Free plan — permanent, real plan (not post-trial degradation)
+// FVM (taxa de conversao entre etapas) MUST be available on free
 export const FREE_LIMITS: PlanLimitConfig = {
-  maxFunnels: 1,
-  maxIntegrations: 1,
+  maxFunnels: 2,
+  maxIntegrations: 2,
   maxMembers: 1,
-  syncIntervalMinutes: 0, // paused
-  historyRetentionDays: 30,
+  maxWebhooks: 0,
+  syncIntervalMinutes: 0, // manual only — nudge to upgrade for auto sync
+  historyRetentionDays: 7,
   hasExport: false,
   hasAlerts: false,
   hasComparison: false,
@@ -38,30 +41,18 @@ export const FREE_LIMITS: PlanLimitConfig = {
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimitConfig> = {
+  free: FREE_LIMITS,
   trial: {
-    // During trial = Pro access
-    maxFunnels: 50,
-    maxIntegrations: 20,
-    maxMembers: 10,
-    syncIntervalMinutes: 60,
-    historyRetentionDays: 730,
-    hasExport: true,
-    hasAlerts: true,
-    hasComparison: true,
-    hasPublicLink: true,
-    hasComments: true,
-    hasBenchmarks: true,
-    hasApi: false,
-    hasSso: false,
-    hasWhiteLabel: false,
-    price: { monthly: 0, yearly: 0 },
+    // Legacy — kept for backwards compat, new users never get this plan
+    ...FREE_LIMITS,
   },
   starter: {
-    maxFunnels: 10,
-    maxIntegrations: 5,
+    maxFunnels: 5,
+    maxIntegrations: 3,
     maxMembers: 3,
+    maxWebhooks: 1,
     syncIntervalMinutes: 240,
-    historyRetentionDays: 180,
+    historyRetentionDays: 30,
     hasExport: true,
     hasAlerts: true,
     hasComparison: false,
@@ -77,6 +68,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimitConfig> = {
     maxFunnels: 50,
     maxIntegrations: 20,
     maxMembers: 10,
+    maxWebhooks: 4,
     syncIntervalMinutes: 60,
     historyRetentionDays: 730,
     hasExport: true,
@@ -94,6 +86,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimitConfig> = {
     maxFunnels: Infinity,
     maxIntegrations: Infinity,
     maxMembers: Infinity,
+    maxWebhooks: Infinity,
     syncIntervalMinutes: 15,
     historyRetentionDays: Infinity,
     hasExport: true,
@@ -109,8 +102,10 @@ export const PLAN_LIMITS: Record<Plan, PlanLimitConfig> = {
   },
 }
 
-// Helper to get effective limits (handles free/expired trial)
-export function getEffectivePlanLimits(plan: Plan, trialExpired: boolean): PlanLimitConfig {
+// Helper to get effective limits
+export function getEffectivePlanLimits(plan: Plan, trialExpired?: boolean): PlanLimitConfig {
+  if (plan === 'free') return FREE_LIMITS
+  // Legacy: treat expired trial as free
   if (plan === 'trial' && trialExpired) return FREE_LIMITS
   return PLAN_LIMITS[plan]
 }

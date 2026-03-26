@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils'
 // Types
 // ---------------------------------------------------------------------------
 
-type PlanKey = 'starter' | 'pro' | 'enterprise'
+type PlanKey = 'free' | 'starter' | 'pro'
 type BillingCycle = 'monthly' | 'yearly'
 
 interface PlanInfo {
@@ -53,19 +53,42 @@ interface PlanInfo {
 
 const PLANS: PlanInfo[] = [
   {
+    key: 'free',
+    name: 'Free',
+    icon: Zap,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    limits: {
+      funnels: 2,
+      integrations: 2,
+      members: 1,
+      sync: 'Manual',
+      history: '7 dias',
+      export: '-',
+      alerts: '-',
+    },
+    features: {
+      comparison: false,
+      publicLink: false,
+      benchmarks: false,
+      sso: false,
+      api: false,
+    },
+  },
+  {
     key: 'starter',
     name: 'Starter',
     icon: Zap,
     monthlyPrice: 97,
     yearlyPrice: 77,
     limits: {
-      funnels: 10,
-      integrations: 5,
+      funnels: 5,
+      integrations: 3,
       members: 3,
       sync: '4h',
-      history: '6 meses',
+      history: '30 dias',
       export: 'CSV',
-      alerts: 'Email (3/dia)',
+      alerts: 'Email (1/dia)',
     },
     features: {
       comparison: false,
@@ -98,29 +121,6 @@ const PLANS: PlanInfo[] = [
       api: false,
     },
   },
-  {
-    key: 'enterprise',
-    name: 'Enterprise',
-    icon: Building2,
-    monthlyPrice: 697,
-    yearlyPrice: 557,
-    limits: {
-      funnels: null,
-      integrations: null,
-      members: null,
-      sync: '15min',
-      history: 'Ilimitado',
-      export: 'PDF + CSV + API',
-      alerts: 'Tudo',
-    },
-    features: {
-      comparison: true,
-      publicLink: true,
-      benchmarks: true,
-      sso: true,
-      api: true,
-    },
-  },
 ]
 
 function formatLimit(value: number | null): string {
@@ -131,45 +131,6 @@ function formatLimit(value: number | null): string {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function TrialBanner({ trialEndsAt }: { trialEndsAt: string }) {
-  const now = new Date()
-  const end = new Date(trialEndsAt)
-  const diffMs = end.getTime() - now.getTime()
-  const daysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-
-  const colorClass =
-    daysLeft <= 1
-      ? 'bg-red-50 border-red-200 text-red-800'
-      : daysLeft <= 3
-        ? 'bg-orange-50 border-orange-200 text-orange-800'
-        : daysLeft <= 7
-          ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-          : 'bg-blue-50 border-blue-200 text-blue-800'
-
-  return (
-    <div className={cn('rounded-lg border p-4 flex items-center justify-between', colorClass)}>
-      <div>
-        <p className="font-medium text-sm">
-          {daysLeft === 0
-            ? 'Seu trial expira hoje!'
-            : daysLeft === 1
-              ? 'Seu trial expira amanha!'
-              : `Seu trial expira em ${daysLeft} dias`}
-        </p>
-        <p className="text-xs mt-0.5 opacity-80">
-          Voce tem acesso ao plano Pro completo durante o trial.
-        </p>
-      </div>
-      <a
-        href="#plans"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-      >
-        Escolha seu plano
-        <ArrowRight className="w-3.5 h-3.5" />
-      </a>
-    </div>
-  )
-}
 
 function CurrentPlanCard({
   planName,
@@ -304,45 +265,34 @@ function BillingToggle({
   onChange: (cycle: BillingCycle) => void
 }) {
   return (
-    <div className="flex items-center justify-center gap-3">
-      <span
+    <div className="inline-flex rounded-lg border bg-muted/50 p-1 gap-1">
+      <button
+        type="button"
+        onClick={() => onChange('monthly')}
         className={cn(
-          'text-sm font-medium transition-colors',
-          billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground',
+          'px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
+          billingCycle === 'monthly'
+            ? 'bg-background shadow-sm text-foreground'
+            : 'text-muted-foreground hover:text-foreground',
         )}
       >
         Mensal
-      </span>
+      </button>
       <button
         type="button"
-        role="switch"
-        aria-checked={billingCycle === 'yearly'}
-        onClick={() => onChange(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+        onClick={() => onChange('yearly')}
         className={cn(
-          'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-          billingCycle === 'yearly' ? 'bg-primary' : 'bg-muted',
-        )}
-      >
-        <span
-          className={cn(
-            'inline-block h-4 w-4 rounded-full bg-white transition-transform',
-            billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-1',
-          )}
-        />
-      </button>
-      <span
-        className={cn(
-          'text-sm font-medium transition-colors',
-          billingCycle === 'yearly' ? 'text-foreground' : 'text-muted-foreground',
+          'px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
+          billingCycle === 'yearly'
+            ? 'bg-background shadow-sm text-foreground'
+            : 'text-muted-foreground hover:text-foreground',
         )}
       >
         Anual
-      </span>
-      {billingCycle === 'yearly' && (
-        <span className="rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-xs font-medium">
-          Economize 20%
+        <span className="rounded-full bg-green-100 text-green-700 px-1.5 py-0.5 text-[10px] font-semibold">
+          -20%
         </span>
-      )}
+      </button>
     </div>
   )
 }
@@ -386,6 +336,7 @@ function PlanColumn({
 }) {
   const PlanIcon = plan.icon
   const price = billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice
+  const isFree = plan.key === 'free'
   const isPopular = plan.key === 'pro'
 
   return (
@@ -417,10 +368,16 @@ function PlanColumn({
           )}
         </div>
         <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold">R${price}</span>
-          <span className="text-sm text-muted-foreground">/mes</span>
+          {isFree ? (
+            <span className="text-2xl font-bold">Gratis</span>
+          ) : (
+            <>
+              <span className="text-2xl font-bold">R${price}</span>
+              <span className="text-sm text-muted-foreground">/mes</span>
+            </>
+          )}
         </div>
-        {billingCycle === 'yearly' && (
+        {!isFree && billingCycle === 'yearly' && (
           <p className="text-xs text-muted-foreground">
             R${plan.yearlyPrice * 12}/ano
           </p>
@@ -504,15 +461,15 @@ function PlanComparisonTable({
   isCheckoutLoading,
   loadingPlan,
 }: {
-  currentPlan: PlanKey | 'free' | null
+  currentPlan: PlanKey | null
   billingCycle: BillingCycle
   onBillingCycleChange: (cycle: BillingCycle) => void
   onSelectPlan: (plan: PlanKey) => void
   isCheckoutLoading: boolean
   loadingPlan: PlanKey | null
 }) {
-  const planOrder: Array<PlanKey | 'free'> = ['free', 'starter', 'pro', 'enterprise']
-  const currentIndex = planOrder.indexOf(currentPlan ?? 'free')
+  const planOrder: PlanKey[] = ['free', 'starter', 'pro']
+  const currentIndex = planOrder.indexOf(currentPlan as PlanKey ?? 'free')
 
   return (
     <div id="plans" className="space-y-4">
@@ -665,7 +622,7 @@ function BillingPageSkeleton() {
 // ---------------------------------------------------------------------------
 
 export function BillingPageClient() {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly')
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly')
   const [loadingPlan, setLoadingPlan] = useState<PlanKey | null>(null)
 
   const subscription = trpc.billing.getSubscription.useQuery()
@@ -676,6 +633,9 @@ export function BillingPageClient() {
   const createCheckout = trpc.billing.createCheckout.useMutation({
     onSuccess: (data) => {
       window.location.href = data.checkoutUrl
+    },
+    onError: (err) => {
+      window.alert(`Nao foi possivel iniciar o checkout: ${err.message}. Entre em contato: contato@funnlio.com`)
     },
     onSettled: () => {
       setLoadingPlan(null)
@@ -696,7 +656,9 @@ export function BillingPageClient() {
   }
 
   const sub = subscription.data
-  const currentPlan = (sub?.plan as PlanKey | 'free' | undefined) ?? 'free'
+  // Map legacy 'trial' and 'enterprise' to display plan; free/starter/pro are shown
+  const rawPlan = sub?.plan ?? 'free'
+  const currentPlan: PlanKey = rawPlan === 'trial' ? 'free' : rawPlan === 'enterprise' ? 'pro' : rawPlan as PlanKey
   const currentPlanLabel =
     currentPlan === 'free'
       ? 'Free'
@@ -737,11 +699,6 @@ export function BillingPageClient() {
         </p>
       </div>
 
-      {/* Trial banner */}
-      {sub?.planExpiresAt && status === 'trialing' && (
-        <TrialBanner trialEndsAt={sub.planExpiresAt} />
-      )}
-
       {/* Current plan */}
       <CurrentPlanCard
         planName={currentPlanLabel}
@@ -766,6 +723,31 @@ export function BillingPageClient() {
         isCheckoutLoading={createCheckout.isPending}
         loadingPlan={loadingPlan}
       />
+
+      {/* Enterprise section */}
+      <div className="rounded-lg border border-dashed bg-muted/30 p-6">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-5 h-5 text-amber-700" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold">Enterprise</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Para agencias e operacoes com mais de 10 membros. Inclui SSO/SAML, API publica, webhooks ilimitados e white-label.
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              SSO permite que sua equipe faca login com Okta, Azure AD ou Google Workspace.
+            </p>
+          </div>
+          <a
+            href="mailto:contato@funnlio.com"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md border border-input bg-background text-sm font-medium hover:bg-muted transition-colors flex-shrink-0"
+          >
+            Fale conosco
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
 
       {/* Invoice history */}
       <InvoiceHistory

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, ChevronLeft, Shield } from 'lucide-react'
 import { trpc } from '@/lib/trpc'
 import { useRouter } from 'next/navigation'
@@ -10,6 +10,7 @@ import { ProviderIcon } from '@/components/ui/provider-icons'
 
 interface Props {
   onClose: () => void
+  initialProviderId?: string | null
 }
 
 const categoryLabels: Record<string, string> = {
@@ -29,7 +30,7 @@ const categoryDescriptions: Record<string, string> = {
   email: 'Métricas de email marketing (aberturas, cliques)',
 }
 
-export function ConnectIntegrationSheet({ onClose }: Props) {
+export function ConnectIntegrationSheet({ onClose, initialProviderId }: Props) {
   const router = useRouter()
   const utils = trpc.useUtils()
   const [step, setStep] = useState<'select' | 'configure'>('select')
@@ -48,6 +49,14 @@ export function ConnectIntegrationSheet({ onClose }: Props) {
     },
     onError: (err) => setError(err.message),
   })
+
+  // Auto-select provider when opened from a specific card (skip step "select")
+  useEffect(() => {
+    if (initialProviderId && providers.length > 0 && step === 'select') {
+      handleSelectProvider(initialProviderId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialProviderId, providers.length])
 
   const selectedProvider = providers.find((p) => p.id === selectedProviderId)
   const configFields = (selectedProvider?.configSchema as { fields?: Array<{ key: string; label: string; type: string; required: boolean; helpText?: string; placeholder?: string }> })?.fields ?? []
