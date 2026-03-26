@@ -2,11 +2,26 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Bell, CreditCard, FileText, GitBranch, LogOut, Plug, Settings, ShieldCheck } from 'lucide-react'
+import {
+  BarChart3,
+  Bell,
+  Code2,
+  CreditCard,
+  FileText,
+  GitBranch,
+  Key,
+  LogOut,
+  Plug,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  Webhook,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
 import { OrgSwitcher } from './org-switcher'
 import { PlanBadge } from '@/components/billing/plan-badge'
+import { NotificationBell } from './notification-bell'
 import { trpc } from '@/lib/trpc'
 
 interface SidebarProps {
@@ -16,10 +31,16 @@ interface SidebarProps {
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/settings/alerts', label: 'Alertas', icon: Bell },
-  { href: '/settings/reports', label: 'Relatórios', icon: FileText },
-  { href: '/integrations', label: 'Integrações', icon: Plug },
+  { href: '/reports', label: 'Relatorios', icon: FileText },
+  { href: '/integrations', label: 'Integracoes', icon: Plug },
   { href: '/settings/billing', label: 'Plano', icon: CreditCard },
-  { href: '/settings', label: 'Configurações', icon: Settings },
+  { href: '/settings', label: 'Configuracoes', icon: Settings },
+]
+
+const advancedItems = [
+  { href: '/settings/api', label: 'API Keys', icon: Key },
+  { href: '/settings/webhooks', label: 'Webhooks', icon: Webhook },
+  { href: '/settings/audit', label: 'Auditoria', icon: ScrollText },
 ]
 
 export function Sidebar({ user }: SidebarProps) {
@@ -30,6 +51,23 @@ export function Sidebar({ user }: SidebarProps) {
   async function handleSignOut() {
     await authClient.signOut()
     router.push('/login')
+  }
+
+  function isActive(href: string) {
+    if (href === '/settings') {
+      return (
+        pathname === '/settings' ||
+        (pathname.startsWith('/settings/') &&
+          ![
+            '/settings/alerts',
+            '/settings/billing',
+            '/settings/api',
+            '/settings/webhooks',
+            '/settings/audit',
+          ].some((p) => pathname.startsWith(p)))
+      )
+    }
+    return pathname === href || pathname.startsWith(href + '/')
   }
 
   return (
@@ -44,29 +82,28 @@ export function Sidebar({ user }: SidebarProps) {
         </Link>
       </div>
 
-      {/* Org Switcher + Plan Badge */}
+      {/* Org Switcher + Plan Badge + Bell */}
       <div className="px-4 pt-3">
         <div className="flex items-center justify-between">
           <OrgSwitcher />
-          {subscription?.plan && (
-            <PlanBadge plan={subscription.plan} size="sm" />
-          )}
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            {subscription?.plan && (
+              <PlanBadge plan={subscription.plan} size="sm" />
+            )}
+          </div>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = href === '/settings'
-            ? pathname === '/settings' || (pathname.startsWith('/settings/') && !['/settings/alerts', '/settings/reports', '/settings/billing'].some(p => pathname.startsWith(p)))
-            : pathname === href || pathname.startsWith(href + '/')
-          return (
+        {navItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             className={cn(
               'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-              isActive
+              isActive(href)
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             )}
@@ -74,10 +111,31 @@ export function Sidebar({ user }: SidebarProps) {
             <Icon className="w-4 h-4" />
             {label}
           </Link>
-          )
-        })}
+        ))}
 
-        {/* Link admin só para saas_admin */}
+        {/* Avancado section */}
+        <div className="pt-4 mt-4 border-t">
+          <p className="px-3 pb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Avancado
+          </p>
+          {advancedItems.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                isActive(href)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Admin link */}
         {user.role === 'saas_admin' && (
           <Link
             href="/admin/overview"
