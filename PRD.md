@@ -1,8 +1,8 @@
 # PRD — Funnlio
 
-**Versão:** 0.1
-**Data:** 2026-03-18
-**Status:** Todas as fases concluídas (Fase 1-4) — Pronto para deploy
+**Versão:** 0.2
+**Data:** 2026-03-25
+**Status:** Fases 1-4 concluídas + Fase 5 (UX/Value Architecture) em andamento
 
 ---
 
@@ -445,6 +445,58 @@ Acessível apenas para usuários com `role = 'saas_admin'` via `/admin/*`.
 - [x] Schema `member_permissions` (viewer/editor/admin)
 - [x] Router `permissions` (list, update) com feature gate Pro+
 - [x] Página `/settings/permissions` com UI de roles
+
+---
+
+### FASE 5 — UX/Value Architecture 🔲 **EM ANDAMENTO**
+
+**Objetivo:** Reorganizar a arquitetura de informação para que o produto entregue valor percebido imediatamente — não apenas tecnicamente funcional.
+
+**First Value Moment (Reed Richards):**
+O cliente ver pela primeira vez a taxa de conversão completa do funil — do primeiro clique pago até a venda fechada — sem ter montado um relatório. O momento exato: *"Eu vi onde meu dinheiro está vazando e nunca tinha percebido isso antes."*
+
+**3 condições para o FVM acontecer:**
+1. Pelo menos 2 integrações conectadas e sincronizadas com dados reais
+2. Funil mapeado em sequência com 2+ etapas
+3. Taxa de conversão entre etapas + gargalo principal destacado automaticamente
+
+**USP Central (Tony Stark):**
+Encadeamento automático de etapas heterogêneas — não um dashboard de BI, mas a camada que vive no *espaço entre* as ferramentas. Google Data Studio conecta fontes; o Funnlio conecta *etapas de jornada* de ferramentas que nunca foram projetadas para conversar.
+
+**Regra de navegação aplicada:**
+Features que trazem o usuário de volta (loops de retorno) → sidebar principal.
+Features de setup pontual → /settings.
+
+#### ✅ 5.1 Reorganização de Navegação e Dashboard (2026-03-25)
+
+- [x] **Sidebar**: Alertas e Relatórios movidos para o menu lateral (de /settings)
+- [x] **InsightsCard**: CTAs específicos por tipo de insight (Ver funil, Ver etapa, Ver campanha, etc.)
+- [x] **FunnelCard**: Badge de saúde por funil (verde/amarelo/vermelho baseado em lastSyncedAt)
+- [x] **ValueCard**: "horas economizadas" → "de análise automática" (reframing de valor)
+- [x] **TrialProgressCard**: Some nos dias 8-11 do trial (evitar contador de pressão)
+- [x] **DailyAlertBanner**: Novo componente — maior queda de conversão em destaque no topo do dashboard
+- [x] **OnboardingProgressBanner**: Novo componente — guia contextual que desaparece quando FVM é atingido
+
+#### 🔲 5.2 Sync Status Global (pendente)
+
+- [ ] Indicador no header: "Dados atualizados há X min" (verde/amarelo/vermelho)
+- [ ] Clicável → leva para painel de integrações com status por provider
+- [ ] Arquivo: `apps/web/components/layout/header.tsx`
+
+#### 🔲 5.3 Onboarding de 5 Passos (pendente — crítico para ativação)
+
+- [ ] Passo 1: Nome da empresa/agência (atual)
+- [ ] Passo 2: Tipo de uso (empresa única vs agência)
+- [ ] Passo 3: Conectar primeira integração (OAuth inline no onboarding)
+- [ ] Passo 4: Criar primeiro funil com template pré-configurado
+- [ ] Passo 5: Primeira sync → redirecionar para o FUNIL (não o dashboard)
+- [ ] Arquivo: `apps/web/app/(app)/onboarding/page.tsx`
+
+#### 🔲 5.4 Nudge de Convite (pendente)
+
+- [ ] Banner no dia 3 do trial após primeiro insight: "Esses dados são mais poderosos compartilhados →"
+- [ ] Modal de convite inline (sem redirecionar para /settings/members)
+- [ ] Arquivo: `apps/web/components/dashboard/invite-nudge.tsx`
 
 ---
 
