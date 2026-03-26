@@ -103,10 +103,20 @@ export class GoogleAdsProvider extends BaseProvider {
 
       const token = await this.getAccessToken(credentials)
       const customerId = credentials['customer_id']!.replace(/-/g, '')
+      // listAccessibleCustomers is a class-level method (no customer ID in path)
       const resp = await fetch(
-        `https://googleads.googleapis.com/v18/customers/${customerId}:listAccessibleCustomers`,
+        'https://googleads.googleapis.com/v18/customers:listAccessibleCustomers',
         { headers: { Authorization: `Bearer ${token}`, 'developer-token': devToken } },
       )
+      // Verify the provided customer ID is in the accessible list
+      if (resp.ok) {
+        const data = (await resp.json()) as { resourceNames?: string[] }
+        const accessible = (data.resourceNames ?? []).map((r: string) => r.replace('customers/', ''))
+        if (!accessible.includes(customerId)) {
+          return { valid: false, errorMessage: `A conta ${credentials['customer_id']} nao esta acessivel com esta conta Google. Contas disponiveis: ${accessible.join(', ')}` }
+        }
+        return { valid: true }
+      }
       if (!resp.ok) {
         const contentType = resp.headers.get('content-type') ?? ''
         if (!contentType.includes('application/json')) {
