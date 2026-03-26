@@ -1,7 +1,7 @@
 'use client'
 
 import { trpc } from '@/lib/trpc'
-import { DollarSign, Clock, AlertTriangle, Database, TrendingUp } from 'lucide-react'
+import { DollarSign, BarChart2, AlertTriangle, Database, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function ValueCard() {
@@ -34,8 +34,8 @@ export function ValueCard() {
       bgColor: 'bg-green-50 dark:bg-green-950/30',
     },
     {
-      icon: Clock,
-      label: 'economizadas',
+      icon: BarChart2,
+      label: 'de análise automática',
       value: `~${data.hoursSaved}h`,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 dark:bg-blue-950/30',

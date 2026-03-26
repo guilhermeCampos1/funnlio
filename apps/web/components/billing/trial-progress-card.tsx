@@ -42,6 +42,9 @@ export function TrialProgressCard() {
   const daysRemaining = Math.max(0, totalDays - daysUsed)
   const progress = Math.min((daysUsed / totalDays) * 100, 100)
 
+  // Dias 8-11: sumir completamente para não virar contador de pressão
+  if (daysUsed > 7 && daysRemaining > 2) return null
+
   // Build check data from available queries
   const checkData: TrialCheckData = {
     hasIntegration: (usage?.integrations?.current ?? 0) > 0,

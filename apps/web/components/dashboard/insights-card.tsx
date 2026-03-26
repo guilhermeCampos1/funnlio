@@ -9,8 +9,10 @@ import {
   Zap,
   Trophy,
   Check,
+  ArrowRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 const insightIcons = {
   conversion_drop: TrendingDown,
@@ -18,6 +20,14 @@ const insightIcons = {
   funnel_bottleneck: AlertTriangle,
   spend_anomaly: Zap,
   milestone: Trophy,
+}
+
+const insightCTAs: Record<string, string> = {
+  conversion_drop: 'Ver funil completo',
+  conversion_spike: 'Ver o que mudou',
+  funnel_bottleneck: 'Ver etapa',
+  spend_anomaly: 'Ver campanha',
+  milestone: 'Compartilhar',
 }
 
 const insightColors = {
@@ -120,9 +130,21 @@ export function InsightsCard() {
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                     {insight.description}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(insight.createdAt).toLocaleDateString('pt-BR')}
-                  </p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(insight.createdAt).toLocaleDateString('pt-BR')}
+                    </p>
+                    {insight.funnelId && insightCTAs[insight.type] && (
+                      <Link
+                        href={`/funnels/${insight.funnelId}`}
+                        className="flex items-center gap-0.5 text-xs text-primary hover:underline font-medium"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {insightCTAs[insight.type]}
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 {!insight.readAt && (
                   <button

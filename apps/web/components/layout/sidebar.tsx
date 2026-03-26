@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, CreditCard, GitBranch, LogOut, Plug, Settings, ShieldCheck } from 'lucide-react'
+import { BarChart3, Bell, CreditCard, FileText, GitBranch, LogOut, Plug, Settings, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authClient } from '@/lib/auth-client'
 import { OrgSwitcher } from './org-switcher'
@@ -15,6 +15,8 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { href: '/settings/alerts', label: 'Alertas', icon: Bell },
+  { href: '/settings/reports', label: 'Relatórios', icon: FileText },
   { href: '/integrations', label: 'Integrações', icon: Plug },
   { href: '/settings/billing', label: 'Plano', icon: CreditCard },
   { href: '/settings', label: 'Configurações', icon: Settings },
@@ -54,13 +56,17 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => (
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const isActive = href === '/settings'
+            ? pathname === '/settings' || (pathname.startsWith('/settings/') && !['/settings/alerts', '/settings/reports', '/settings/billing'].some(p => pathname.startsWith(p)))
+            : pathname === href || pathname.startsWith(href + '/')
+          return (
           <Link
             key={href}
             href={href}
             className={cn(
               'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-              pathname === href || pathname.startsWith(href + '/')
+              isActive
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             )}
@@ -68,7 +74,8 @@ export function Sidebar({ user }: SidebarProps) {
             <Icon className="w-4 h-4" />
             {label}
           </Link>
-        ))}
+          )
+        })}
 
         {/* Link admin só para saas_admin */}
         {user.role === 'saas_admin' && (
