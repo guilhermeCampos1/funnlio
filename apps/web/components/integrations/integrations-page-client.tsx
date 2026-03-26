@@ -194,14 +194,16 @@ export function IntegrationsPageClient() {
                 <button
                   key={provider.id}
                   onClick={() => {
-                    setPreselectedProviderId(provider.id)
-                    setSheetOpen(true)
+                    if (!isConnected) {
+                      setPreselectedProviderId(provider.id)
+                      setSheetOpen(true)
+                    }
                   }}
-                  disabled={isConnected}
+                  disabled={false}
                   className={`
                     group relative rounded-xl border p-5 text-left transition-all duration-200
                     ${isConnected
-                      ? 'opacity-50 cursor-default bg-muted/30'
+                      ? 'cursor-default border-green-200 bg-green-50/30 dark:bg-green-950/10'
                       : 'hover:shadow-lg hover:border-primary/30 hover:scale-[1.01] active:scale-[0.99] cursor-pointer bg-card'
                     }
                   `}
@@ -217,7 +219,8 @@ export function IntegrationsPageClient() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-sm">{provider.name}</h3>
                         {isConnected && (
-                          <span className="text-[10px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full border border-green-200">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full border border-green-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                             Conectada
                           </span>
                         )}

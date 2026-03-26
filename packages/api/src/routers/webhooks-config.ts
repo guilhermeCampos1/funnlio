@@ -1,6 +1,6 @@
 import { router, ownerAdminProcedure, z, TRPCError } from '../trpc.js'
-import { webhookConfigs, webhookLogs, eq, and, desc, organizations } from '@funnlio/db'
-import { hasFeatureAccess } from '@funnlio/shared'
+import { webhookConfigs, webhookLogs, eq, and, desc, organizations, sql } from '@funnlio/db'
+import { getEffectivePlanLimits } from '@funnlio/shared'
 import type { Plan } from '@funnlio/shared'
 import crypto from 'node:crypto'
 
@@ -23,9 +23,27 @@ export const webhooksConfigRouter = router({
       const org = await ctx.db.query.organizations.findFirst({ where: eq(organizations.id, organizationId) })
       if (!org) throw new TRPCError({ code: 'NOT_FOUND' })
       const plan = org.plan as Plan
-      const trialExpired = plan === 'trial' && org.planExpiresAt && new Date(org.planExpiresAt) < new Date()
-      if (!hasFeatureAccess(plan, 'webhooks', !!trialExpired)) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Webhooks requerem plano Enterprise' })
+      const limits = getEffectivePlanLimits(plan)
+
+      // Check maxWebhooks limit
+      if (limits.maxWebhooks === 0) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Webhooks estao disponiveis a partir do plano Starter. Faca upgrade para configurar webhooks.',
+        })
+      }
+
+      const [{ count }] = await ctx.db
+        .select({ count: sql<number>`count(*)` })
+        .from(webhookConfigs)
+        .where(eq(webhookConfigs.organizationId, organizationId))
+
+      if (count >= limits.maxWebhooks) {
+        const nextPlan = plan === 'starter' ? 'Pro (ate 4 webhooks)' : 'Enterprise (ilimitado)'
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Limite de ${limits.maxWebhooks} webhook(s) atingido no seu plano. Upgrade para ${nextPlan} para mais.`,
+        })
       }
 
       const secret = `whsec_${crypto.randomBytes(24).toString('hex')}`
