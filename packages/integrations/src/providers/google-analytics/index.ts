@@ -100,8 +100,12 @@ export class GoogleAnalyticsProvider extends BaseProvider {
         { headers: { Authorization: `Bearer ${token}` } },
       )
       if (!resp.ok) {
+        const contentType = resp.headers.get('content-type') ?? ''
+        if (!contentType.includes('application/json')) {
+          return { valid: false, errorMessage: `Google Analytics retornou erro ${resp.status}. Verifique o Property ID e tente novamente.` }
+        }
         const err = (await resp.json()) as { error?: { message?: string } }
-        return { valid: false, errorMessage: err.error?.message ?? 'Propriedade inválida' }
+        return { valid: false, errorMessage: err.error?.message ?? 'Propriedade invalida' }
       }
       return { valid: true }
     } catch (err) {

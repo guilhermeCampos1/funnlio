@@ -93,19 +93,31 @@ export class GoogleAdsProvider extends BaseProvider {
 
   async validateCredentials(credentials: Credentials): Promise<ValidateCredentialsResult> {
     try {
+      const devToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN
+      if (!devToken) {
+        return {
+          valid: false,
+          errorMessage: 'Google Ads ainda nao esta disponivel. O administrador precisa configurar o Developer Token. Entre em contato com o suporte.',
+        }
+      }
+
       const token = await this.getAccessToken(credentials)
       const customerId = credentials['customer_id']!.replace(/-/g, '')
       const resp = await fetch(
         `https://googleads.googleapis.com/v18/customers/${customerId}:listAccessibleCustomers`,
-        { headers: { Authorization: `Bearer ${token}`, 'developer-token': process.env.GOOGLE_ADS_DEVELOPER_TOKEN ?? '' } },
+        { headers: { Authorization: `Bearer ${token}`, 'developer-token': devToken } },
       )
       if (!resp.ok) {
+        const contentType = resp.headers.get('content-type') ?? ''
+        if (!contentType.includes('application/json')) {
+          return { valid: false, errorMessage: `Google Ads retornou erro ${resp.status}. Verifique o Customer ID e tente novamente.` }
+        }
         const err = (await resp.json()) as { error?: { message?: string } }
-        return { valid: false, errorMessage: err.error?.message ?? 'Credenciais inválidas' }
+        return { valid: false, errorMessage: err.error?.message ?? 'Credenciais invalidas' }
       }
       return { valid: true }
     } catch (err) {
-      return { valid: false, errorMessage: err instanceof Error ? err.message : 'Erro de validação' }
+      return { valid: false, errorMessage: err instanceof Error ? err.message : 'Erro de validacao' }
     }
   }
 
